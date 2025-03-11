@@ -1,0 +1,85 @@
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv
+.poetry-cache/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+__pypackages__/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.coverage.*
+coverage.xml
+*.cover
+
+# IDE / Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+
+# Static files collected
+staticfiles/
+static/collected/
+
+# Unit test / coverage reports
+coverage/
+.coverage
+.coverage.*
+nosetests.xml
+junit-*.xml
+
+# Translations
+*.mo
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Local development settings
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
