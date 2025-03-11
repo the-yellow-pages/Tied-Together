@@ -1,5 +1,5 @@
-# Test Mini App
-
+# Tied-Together
+This is an app for making friends via matchmaking.
 A Django + DRF application that serves index.html from the root API endpoint.
 
 ## Features
