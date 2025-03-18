@@ -65,7 +65,7 @@
                 candidateIdElement.textContent = "";
                 wordCard.classList.remove('swiped-left', 'swiped-right', 'flash-red', 'flash-green');
                 
-                const response = await fetch('/api/getnextcandidate/');
+                const response = await fetch('/api/getnextcandidate');
                 const data = await response.json();
                 currentCandidate = data;
                 
@@ -101,7 +101,7 @@
                     wordCard.classList.add('swiped-right');
                     
                     // Make API request
-                    fetch('/api/goodswipe/', {
+                    fetch('/api/goodswipe', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -146,7 +146,7 @@
                     wordCard.classList.add('swiped-left');
                     
                     // Make API request
-                    fetch('/api/badswipe/', {
+                    fetch('/api/badswipe', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
