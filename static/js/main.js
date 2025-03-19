@@ -1,5 +1,6 @@
 // Current candidate data
 let currentCandidate = null;
+let currentImageIndex = 0;
 const wordCard = document.getElementById('word-display');
 const candidateWordElement = document.getElementById('candidate-word');
 const candidateIdElement = document.getElementById('candidate-id');
@@ -23,6 +24,42 @@ function formatPrice(price, currency = 'EUR') {
     }).format(price);
 }
 
+// Function to handle image navigation
+function navigateImages(direction) {
+    if (!currentCandidate || !currentCandidate.all_images || currentCandidate.all_images.length <= 1) {
+        return; // Do nothing if there are no images or only one image
+    }
+    
+    // Calculate new index with wraparound
+    if (direction === 'next') {
+        currentImageIndex = (currentImageIndex + 1) % currentCandidate.all_images.length;
+    } else {
+        currentImageIndex = (currentImageIndex - 1 + currentCandidate.all_images.length) % currentCandidate.all_images.length;
+    }
+    
+    // Update the image source
+    carImageElement.src = currentCandidate.all_images[currentImageIndex];
+    
+    // Show navigation indicators
+    updateImageCounter();
+}
+
+// Update image counter display
+function updateImageCounter() {
+    if (currentCandidate && currentCandidate.all_images && currentCandidate.all_images.length > 1) {
+        const counterElement = document.getElementById('image-counter');
+        if (counterElement) {
+            counterElement.textContent = `${currentImageIndex + 1}/${currentCandidate.all_images.length}`;
+            counterElement.style.display = 'block';
+        }
+    } else {
+        const counterElement = document.getElementById('image-counter');
+        if (counterElement) {
+            counterElement.style.display = 'none';
+        }
+    }
+}
+
 // Get next candidate
 async function getNextCandidate() {
     try {
@@ -43,6 +80,7 @@ async function getNextCandidate() {
         }
 
         currentCandidate = data.candidate;
+        currentImageIndex = 0; // Reset image index for new candidate
 
         // Display the car information
         candidateWordElement.textContent = currentCandidate.title || 'Car details not available';
@@ -52,9 +90,23 @@ async function getNextCandidate() {
         if (currentCandidate.image_url) {
             carImageElement.src = currentCandidate.image_url;
             carImageElement.alt = currentCandidate.title || 'Car image';
+            
+            // If there are multiple images, add the navigation overlay
+            if (currentCandidate.all_images && currentCandidate.all_images.length > 1) {
+                document.getElementById('left-nav').style.display = 'block';
+                document.getElementById('right-nav').style.display = 'block';
+                updateImageCounter();
+            } else {
+                document.getElementById('left-nav').style.display = 'none';
+                document.getElementById('right-nav').style.display = 'none';
+                document.getElementById('image-counter').style.display = 'none';
+            }
         } else {
             carImageElement.src = '/static/img/no-image.jpg';
             carImageElement.alt = 'No image available';
+            document.getElementById('left-nav').style.display = 'none';
+            document.getElementById('right-nav').style.display = 'none';
+            document.getElementById('image-counter').style.display = 'none';
         }
 
         // Set car details
@@ -288,3 +340,19 @@ function getCsrfToken() {
 // Add button event listeners
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
+
+// Add image navigation event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Add event listeners for image navigation
+    document.getElementById('left-nav').addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering card swipe
+        navigateImages('prev');
+    });
+    
+    document.getElementById('right-nav').addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering card swipe
+        navigateImages('next');
+    });
+    
+    getNextCandidate();
+});

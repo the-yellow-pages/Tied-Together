@@ -12,22 +12,18 @@
 <body>
     <div class="container">
         <h1>Car Tinder</h1>
-
-        <div class="instructions">
-            <h2>Instructions</h2>
-            <p>Swipe right for cars you like, swipe left for cars you don't like.</p>
-            <p>You can also tap the buttons below or use keyboard arrows:</p>
-            <ul>
-                <li><i class="fas fa-arrow-left"></i> Left arrow / Swipe left = Don't like</li>
-                <li><i class="fas fa-arrow-right"></i> Right arrow / Swipe right = Like</li>
-            </ul>
-        </div>
-
         <div class="swipe-card">
             <div id="word-display" class="word-card">
                 <div class="word-content">
                     <div id="car-image" class="car-image">
                         <img src="" alt="Car image" id="car-img">
+                        <div id="left-nav" class="image-nav left-nav">
+                            <i class="fas fa-chevron-left"></i>
+                        </div>
+                        <div id="right-nav" class="image-nav right-nav">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div id="image-counter" class="image-counter">1/1</div>
                     </div>
                     <h2 id="candidate-word">Loading...</h2>
                     <div id="car-details" class="car-details">
@@ -49,6 +45,15 @@
             </div>
 
             <div id="swipe-feedback" class="feedback-message"></div>
+        </div>
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <p>Swipe right for cars you like, swipe left for cars you don't like.</p>
+            <p>You can also tap the buttons below or use keyboard arrows:</p>
+            <ul>
+                <li><i class="fas fa-arrow-left"></i> Left arrow / Swipe left = Don't like</li>
+                <li><i class="fas fa-arrow-right"></i> Right arrow / Swipe right = Like</li>
+            </ul>
         </div>
     </div>
 

@@ -130,6 +130,7 @@ class VehiclesDB:
             ) t5
             on t1.vehicle_id=t5.vehicle_id
             where t3.body_type != 'Van'
+            and t3.body_type != 'OtherCar'
             and t4.pricerating != 'unk'
             and t1.post_time is not NULL
             and t2.is_sell='unk'
