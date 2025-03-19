@@ -1,12 +1,10 @@
-from flask import render_template, request, jsonify, APIRouter
+from flask import render_template, request, jsonify
 import random
 from app import app
+from controllers.car import CarController
 
-# Simple list of random words for demonstration
-RANDOM_WORDS = [
-    "Sedan", "SUV", "Truck", "Coupe", "Convertible", 
-    "Minivan", "Hatchback", "Sports Car", "Electric", "Hybrid"
-]
+# Initialize the car controller
+car_controller = CarController()
 
 @app.route('/')
 def index():
@@ -46,14 +44,20 @@ def badswipe():
 @app.route('/api/getnextcandidate', methods=['GET'])
 def getnextcandidate():
     """
-    API endpoint that returns a random word as the next candidate
+    API endpoint that returns a random car from the database
     """
-    # For demonstration, simply return a random word from the list
-    random_word = random.choice(RANDOM_WORDS)
+    car = car_controller.get_random_car()
+    formatted_car = car_controller.format_car_for_frontend(car)
+    
+    if not formatted_car:
+        return jsonify({
+            "status": "error",
+            "message": "No cars available"
+        }), 404
+    
     return jsonify({
         "status": "success",
-        "candidate": random_word,
-        "id": random.randint(1, 1000)  # Adding a random ID for demo purposes
+        "candidate": formatted_car
     })
 
 @app.route('/api/all_cars', methods=['GET'])
@@ -61,7 +65,11 @@ def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
+    cars = car_controller.db.get_hundred_vehicle()
+    car_count = len(cars) if cars else 0
+    
     return jsonify({
         "status": "success",
-        "cars": RANDOM_WORDS
+        "count": car_count,
+        "sample": cars[:5] if cars else []
     })
