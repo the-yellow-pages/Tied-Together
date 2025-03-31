@@ -2,6 +2,11 @@
 let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
+import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar } from '/static/js/tool/telegram.js'
+
+let tg = null;
+let telegramConnected = false;
+
 
 const wordCard = document.getElementById('word-display');
 const candidateWordElement = document.getElementById('candidate-word');
@@ -13,7 +18,16 @@ const carSpecsElement = document.getElementById('car-specs');
 const carLocationElement = document.getElementById('car-location');
 
 // Fetch the first car on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    tg = await loadTelegramScript(tg)
+    if (tg) {
+        initTelegramWebApp(tg, telegramConnected);
+        telegramConnected = true; // Set the flag to true when connected
+        console.log("Telegram loaded");
+    }
+    else {
+        console.log("telegram not loaded")
+    }
     getNextCandidate();
 });
 
@@ -218,6 +232,16 @@ async function dislikeWord() {
     }
 }
 
+// Share the current car through Telegram
+function shareCurrentCar() {
+    if (currentCandidate) {
+        shareFavoriteCar(tg, telegramConnected, currentCandidate);
+        feedbackElement.innerHTML = `<span class="shared">Shared: ${currentCandidate.title || 'this car'}</span>`;
+    } else {
+        feedbackElement.textContent = 'No car to share';
+    }
+}
+
 // Add touch swipe functionality with color flashes
 let touchStartX = 0;
 let touchEndX = 0;
@@ -333,6 +357,7 @@ function getCsrfToken() {
 // Add button event listeners
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
+document.getElementById('share-btn').addEventListener('click', shareCurrentCar);
 
 // Add image navigation event listenersd event listener and merge its content
 document.addEventListener('DOMContentLoaded', () => {

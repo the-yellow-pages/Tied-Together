@@ -224,6 +224,15 @@ h1 {
     background-color: #27ae60;
 }
 
+.share {
+    background-color: #3498db;
+    color: white;
+}
+
+.share:hover {
+    background-color: #2980b9;
+}
+
 .feedback-message {
     text-align: center;
     margin-top: 1.5rem;
@@ -238,6 +247,11 @@ h1 {
 
 .disliked {
     color: #e74c3c;
+    font-weight: bold;
+}
+
+.shared {
+    color: #3498db;
     font-weight: bold;
 }
 
