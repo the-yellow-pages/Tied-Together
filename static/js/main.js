@@ -2,7 +2,7 @@
 let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
-import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar } from '/static/js/tool/telegram.js'
+import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar, getUserInfo } from '/static/js/tool/telegram.js'
 
 let tg = null;
 let telegramConnected = false;
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initTelegramWebApp(tg, telegramConnected);
         telegramConnected = true; // Set the flag to true when connected
         console.log("Telegram loaded");
+        console.log("USER", getUserInfo(tg));
     }
     else {
         console.log("telegram not loaded")

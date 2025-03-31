@@ -45,7 +45,7 @@ function setupTelegramMainButton(tg, telegramConnected) {
         text: 'SHARE FAVORITE CAR',
         color: '#31b545',
         text_color: '#ffffff',
-        is_visible: false
+        is_visible: true
     });
 
     // Add event listener for the main button
@@ -73,4 +73,23 @@ export function shareFavoriteCar(tg, telegramConnected, currentCandidate) {
 
     // Send data back to Telegram
     tg.sendData(JSON.stringify(carData));
+}
+
+export function getUserInfo(tg) {
+    if (!tg) {
+        console.error("Telegram WebApp is not initialized");
+        return null;
+    }
+    try {
+        const { id, first_name, last_name, username } = window.Telegram.WebApp.initDataUnsafe.user;
+    } catch (error) {
+        console.error("Error retrieving user info:", error);
+        return null;
+    }
+    return {
+        id,
+        first_name,
+        last_name,
+        username
+    };
 }
