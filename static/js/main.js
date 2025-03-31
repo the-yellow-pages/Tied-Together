@@ -1,6 +1,8 @@
 // Current candidate data
 let currentCandidate = null;
 let currentImageIndex = 0;
+import { formatPrice } from '/static/js/tool/formatters.js';
+
 const wordCard = document.getElementById('word-display');
 const candidateWordElement = document.getElementById('candidate-word');
 const candidateIdElement = document.getElementById('candidate-id');
@@ -15,31 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     getNextCandidate();
 });
 
-// Format price with currency
-function formatPrice(price, currency = 'EUR') {
-    if (!price) return 'Price not available';
-    return new Intl.NumberFormat('de-DE', {
-        style: 'currency',
-        currency: currency
-    }).format(price);
-}
-
 // Function to handle image navigation
 function navigateImages(direction) {
     if (!currentCandidate || !currentCandidate.all_images || currentCandidate.all_images.length <= 1) {
         return; // Do nothing if there are no images or only one image
     }
-    
+
     // Calculate new index with wraparound
     if (direction === 'next') {
         currentImageIndex = (currentImageIndex + 1) % currentCandidate.all_images.length;
     } else {
         currentImageIndex = (currentImageIndex - 1 + currentCandidate.all_images.length) % currentCandidate.all_images.length;
     }
-    
+
     // Update the image source
     carImageElement.src = currentCandidate.all_images[currentImageIndex];
-    
+
     // Show navigation indicators
     updateImageCounter();
 }
@@ -90,7 +83,7 @@ async function getNextCandidate() {
         if (currentCandidate.image_url) {
             carImageElement.src = currentCandidate.image_url;
             carImageElement.alt = currentCandidate.title || 'Car image';
-            
+
             // If there are multiple images, add the navigation overlay
             if (currentCandidate.all_images && currentCandidate.all_images.length > 1) {
                 document.getElementById('left-nav').style.display = 'block';
@@ -341,18 +334,18 @@ function getCsrfToken() {
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
 
-// Add image navigation event listeners
+// Add image navigation event listenersd event listener and merge its content
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners for image navigation
     document.getElementById('left-nav').addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent triggering card swipe
         navigateImages('prev');
     });
-    
+
     document.getElementById('right-nav').addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent triggering card swipe
         navigateImages('next');
     });
-    
+
     getNextCandidate();
 });
