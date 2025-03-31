@@ -6,6 +6,7 @@ import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar, getUserInfo }
 
 let tg = null;
 let telegramConnected = false;
+let tgUser = null;
 
 
 const wordCard = document.getElementById('word-display');
@@ -24,13 +25,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         initTelegramWebApp(tg, telegramConnected);
         telegramConnected = true; // Set the flag to true when connected
         console.log("Telegram loaded");
-        console.log("USER", getUserInfo(tg));
+        tgUser = getUserInfo(tg);
+        console.log("USER", tgUser);
+
+        // Set the greeting based on user info
+        updateGreeting();
     }
     else {
-        console.log("telegram not loaded")
+        console.log("telegram not loaded");
+        updateGreeting();
     }
     getNextCandidate();
 });
+
+// Function to update the greeting based on user info
+function updateGreeting() {
+    const greetingElement = document.getElementById('greeting');
+    if (greetingElement) {
+        if (tgUser && tgUser.username) {
+            greetingElement.innerHTML = `Hello, <span class="username">@${tgUser.username}</span>! Welcome to Car Tinder!`;
+            greetingElement.classList.add('user-greeting');
+        } else {
+            greetingElement.innerHTML = 'For the best experience, please open this app in <a href="https://telegram.org/" target="_blank">Telegram</a>!';
+            greetingElement.classList.add('telegram-invite');
+        }
+    }
+}
 
 // Function to handle image navigation
 function navigateImages(direction) {

@@ -20,6 +20,36 @@ h1 {
     margin-bottom: 1.5rem;
 }
 
+/* Greeting styles */
+.greeting {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    min-height: 30px;
+}
+
+.user-greeting {
+    color: #3498db;
+}
+
+.telegram-invite {
+    color: #7f8c8d;
+}
+
+.telegram-invite a {
+    color: #2980b9;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.telegram-invite a:hover {
+    text-decoration: underline;
+}
+
+.username {
+    font-weight: bold;
+}
+
 .instructions {
     background-color: #fff;
     border-radius: 10px;

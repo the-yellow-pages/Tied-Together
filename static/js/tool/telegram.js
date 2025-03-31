@@ -82,14 +82,14 @@ export function getUserInfo(tg) {
     }
     try {
         const { id, first_name, last_name, username } = window.Telegram.WebApp.initDataUnsafe.user;
+        return {
+            id,
+            first_name,
+            last_name,
+            username
+        };
     } catch (error) {
         console.error("Error retrieving user info:", error);
         return null;
     }
-    return {
-        id,
-        first_name,
-        last_name,
-        username
-    };
 }
