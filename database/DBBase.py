@@ -1,4 +1,3 @@
-
 from os import getenv
 from dotenv import load_dotenv
 import psycopg2
@@ -28,6 +27,22 @@ class DBBase:
             return None
         self.cursor = self.connection.cursor()
         
+        
+    def make_dict(self, row: tuple):
+        if not row or not len(row):
+            return None
+        column_names = [description[0]
+                        for description in self.cursor.description]
+        return {column_names[i]: row[i] for i in range(len(row))}
+    
+    def make_dicts(self, rows: list):
+        if not rows or not len(rows):
+            return None
+        column_names = [description[0]
+                        for description in self.cursor.description]
+        return [{column_names[i]: row[i] for i in range(len(row))} for row in rows]
+    
+        
     def select(self, q):
         print(q)
         self.cursor.execute(q)
@@ -41,3 +56,12 @@ class DBBase:
         output_rows_dict = [dict(zip(column_names, row))
                             for row in output_rows]
         return output_rows_dict if output_rows_dict else None 
+    
+    def safely_execute_one_with_parameters(self, query, params):
+        try:
+            self.cursor.execute(query, params)
+            self.connection.commit()
+            return self.cursor.fetchone()
+        except Exception as e:
+            self.connection.rollback()
+            raise e
