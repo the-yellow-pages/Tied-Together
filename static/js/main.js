@@ -3,6 +3,7 @@ let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
 import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar, getUserInfo } from '/static/js/tool/telegram.js'
+import { fetchNextCandidate, recordLike, recordDislike } from '/static/js/tool/api.js';
 
 let tg = null;
 let telegramConnected = false;
@@ -100,14 +101,7 @@ async function getNextCandidate() {
         carLocationElement.textContent = "";
         wordCard.classList.remove('swiped-left', 'swiped-right', 'flash-red', 'flash-green');
 
-        const response = await fetch('/api/getnextcandidate');
-        const data = await response.json();
-
-        if (data.status !== 'success' || !data.candidate) {
-            throw new Error('Failed to get car data');
-        }
-
-        currentCandidate = data.candidate;
+        currentCandidate = await fetchNextCandidate();
         currentImageIndex = 0; // Reset image index for new candidate
 
         // Display the car information
@@ -174,34 +168,17 @@ async function likeWord() {
         wordCard.classList.add('flash-green');
 
         // Wait for the flash animation to complete
-        setTimeout(() => {
+        setTimeout(async () => {
             // Then animate card swipe right
             wordCard.classList.remove('flash-green');
             wordCard.classList.add('swiped-right');
 
             // Make API request
-            fetch('/api/goodswipe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    candidateId: currentCandidate.id,
-                    action: 'like'
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
+            await recordLike(currentCandidate.id);
+            feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
 
-                    // Wait for animation to complete before getting next word
-                    setTimeout(getNextCandidate, 500);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    feedbackElement.textContent = 'Error recording like';
-                });
+            // Wait for animation to complete before getting next word
+            setTimeout(getNextCandidate, 500);
         }, 300); // Match the flash animation duration
     } catch (error) {
         console.error('Error:', error);
@@ -218,34 +195,17 @@ async function dislikeWord() {
         wordCard.classList.add('flash-red');
 
         // Wait for the flash animation to complete
-        setTimeout(() => {
+        setTimeout(async () => {
             // Then animate card swipe left
             wordCard.classList.remove('flash-red');
             wordCard.classList.add('swiped-left');
 
             // Make API request
-            fetch('/api/badswipe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    candidateId: currentCandidate.id,
-                    action: 'dislike'
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
+            await recordDislike(currentCandidate.id);
+            feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
 
-                    // Wait for animation to complete before getting next word
-                    setTimeout(getNextCandidate, 500);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    feedbackElement.textContent = 'Error recording dislike';
-                });
+            // Wait for animation to complete before getting next word
+            setTimeout(getNextCandidate, 500);
         }, 300); // Match the flash animation duration
     } catch (error) {
         console.error('Error:', error);

@@ -25,7 +25,7 @@ for host in ALLOWED_HOSTS:
 CORS(app, origins=origins)
 
 # Import routes
-from routes import *
+from routes.routes import *
 
 if __name__ == '__main__':
     # Get port from environment variable or default to 5000
