@@ -6,8 +6,6 @@ class UserController:
     def __init__(self):
         self.db = UsersDB()
         
-        
-
     def create_user(self, user_data):
         """
         Create a new user.
@@ -44,7 +42,7 @@ class UserController:
 
     def get_liked_vehicles(self, user_id):
         """
-        Retrieve all liked vehicles for a user.
+        Retrieve all liked vehicles for a user by joining of all tables.
         :param user_id: int
         """
         return self.db.make_dicts(self.db.read_liked_vehicles(user_id))

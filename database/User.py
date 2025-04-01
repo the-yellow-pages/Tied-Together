@@ -140,11 +140,65 @@ class UsersDB(DBBase):  # Inherit from DBBase
     def read_liked_vehicles(self, user_id):
         """
         tested
-        Retrieve all liked vehicles for a user.
+        Retrieve all liked vehicles for a user by joinig tables
         :param user_id: int
+        return: list of liked vehicles in this format:
+                   [{
+                "price_id": 40830,
+                "price_last": 33550.0,
+                "id": 407359999,
+                "vehicle_id": 407359999,
+                "price": "€33,750",
+                "timestamp": "2025-01-07T12:34:56.507469",
+                "post_time": "new",
+                "is_eye_catcher": False,
+                "is_new": True,
+                "num_images": 23,
+                "site_id": "GERMANY",
+                "short_title": "Mercedes-Benz CLA 200",
+                "sub_title": "d 8G-DCT AMG Line+LED+CARPLAY+WIDESCREEN",
+                "has_damage": False,
+                "is_video_enabled": True,
+                "ready_to_drive": True,
+                "highlights": "60 Mon. Garantie mögl., Finanzierung mögl., Lieferung mögl.",
+                "title": "Mercedes-Benz CLA 200 d 8G-DCT AMG Line+LED+CARPLAY+WIDESCREEN",
+                "url": "https://suchen.mobile.de/auto-inserat/mercedes-benz-cla-200-d-8g-dct-amg-line-led-carplay-widescreen-elmshorn/407359999.html",
+                "category": "Saloon",
+                "segment": "Car",
+                "is_sell": "unk",
+                "gross_amount": 33550.0,
+                "currency": "EUR",
+                "net_amount": 28193.28,
+                "pricerating": '{"rating": "REASONABLE_PRICE", "ratingLabel": "Fair price", "thresholdLabels": ["\\u20ac24,500", "\\u20ac29,000", "\\u20ac31,000", "\\u20ac34,700", "\\u20ac39,800", "\\u20ac41,600"], "vehiclePriceOffset": 74}',
+                "location": "Elmshorn",
+                "first_registration": "10/2021",
+                "power": "110\xa0kW\xa0(150\xa0hp)",
+                "fuel_type": "Diesel",
+                "mileage": "84,127\xa0km",
+                "transmission": "Automatic",
+                "cubic_capacity": "1,950\xa0ccm",
+                "body_type": "Limousine",
+                "image_urls": "img1.jpg,img2.jpg,img3.jpg"
+            }
         """
-        q = "SELECT * FROM liked_vehicles WHERE user_id = %s;"
-        self.cursor.execute(q, (user_id,))
+        query = """
+            SELECT * FROM 
+            (SELECT id AS price_id, price AS price_last, * FROM price_history) t1
+            LEFT JOIN (SELECT id AS vehicle_id, * FROM vehicles) t2
+            ON t1.vehicle_id = t2.vehicle_id
+            LEFT JOIN
+            (SELECT vehicle_id, gross_amount, currency, net_amount, pricerating FROM price) t4
+            ON t1.vehicle_id = t4.vehicle_id
+            LEFT JOIN 
+            (SELECT vehicle_id, location, first_registration, power, fuel_type, mileage, transmission, cubic_capacity, body_type FROM attributes) t3
+            ON t1.vehicle_id = t3.vehicle_id
+            LEFT JOIN (
+                SELECT vehicle_id, STRING_AGG(uri::text, ',') AS image_urls
+                FROM images GROUP BY vehicle_id
+            ) t5 ON t1.vehicle_id = t5.vehicle_id
+            WHERE t1.vehicle_id IN (SELECT vehicle_id FROM liked_vehicles WHERE user_id = %s);
+        """
+        self.cursor.execute(query, (user_id,))
         return self.cursor.fetchall()
 
     def delete_liked_vehicle(self, user_id, vehicle_id):
