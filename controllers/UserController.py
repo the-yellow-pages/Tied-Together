@@ -53,8 +53,8 @@ class UserController:
         :param user: dict with keys 'id', 'first_name', 'last_name', 'username'
         :param vehicle_id: int
         """
-        user = self.get_user(user['id'])
-        if not user:
+        user_db = self.get_user(user['id'])
+        if not user_db:
             user_id = self.create_user(user)
         else:
             user_id = user['id']

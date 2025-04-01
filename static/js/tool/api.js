@@ -14,7 +14,7 @@ export async function fetchNextCandidate() {
 }
 
 // Record a like action for a candidate
-export async function recordLike(candidateId) {
+export async function recordLike(user, candidateId) {
     try {
         const response = await fetch('/api/goodswipe', {
             method: 'POST',
@@ -23,6 +23,7 @@ export async function recordLike(candidateId) {
                 'X-CSRFToken': getCsrfToken(),
             },
             body: JSON.stringify({
+                user,
                 candidateId,
                 action: 'like',
             }),

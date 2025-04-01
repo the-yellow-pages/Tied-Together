@@ -174,7 +174,7 @@ async function likeWord() {
             wordCard.classList.add('swiped-right');
 
             // Make API request
-            await recordLike(currentCandidate.id);
+            await recordLike(tgUser, currentCandidate.id);
             feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
