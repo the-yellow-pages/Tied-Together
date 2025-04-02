@@ -1,13 +1,12 @@
-# Tied-Together
-This is an app for making friends via matchmaking.
-A Django + DRF application that serves index.html from the root API endpoint.
+A Flask application that serves index.html from the root API endpoint.
 
 ## Features
 
-- Django 4.2.7
-- Django Rest Framework 3.14.0
+- Flask 2.3.3
+- REST API endpoints for car matchmaking
 - Serves static HTML from root endpoint
-- Example API endpoint at /api/hello/
+- Interactive swipe interface for car selection
+- Favorites system to save liked vehicles
 
 ## Setup
 
@@ -21,22 +20,27 @@ A Django + DRF application that serves index.html from the root API endpoint.
    poetry shell
    ```
 
-3. Run migrations:
+3. Start the development server:
    ```
-   python manage.py migrate
-   ```
-
-4. Start the development server:
-   ```
-   python manage.py runserver
+   python -m flask run
    ```
 
-5. Visit http://127.0.0.1:8000/ in your browser
+   or
+
+   ```
+   flask run
+   ```
+
+4. Visit http://127.0.0.1:5000/ in your browser
 
 ## API Endpoints
 
 - `GET /`: Serves the main index.html page
-- `GET /api/hello/`: Returns a JSON message
+- `GET /api/getnextcandidate`: Returns a random car for swiping
+- `POST /api/goodswipe`: Records a positive swipe
+- `POST /api/badswipe`: Records a negative swipe
+- `GET /api/all_cars`: Returns a list of all cars (for debugging)
+- `POST /api/get_liked_vehicles`: Returns a user's liked vehicles with pagination
 
 ## Running with ngrok
 
@@ -53,23 +57,23 @@ To expose your local development server to the internet, you can use ngrok:
      brew install ngrok
      ```
 
-2. Run your Django server:
+2. Run your Flask server:
    ```
-   python manage.py runserver
+   flask run --port=8001
    ```
 
 3. In a separate terminal, start ngrok:
    ```
-   ngrok http 8000
+   ngrok http 8001
    ```
 
-4. ngrok will provide a public URL (like `https://abc123.ngrok.io`) that forwards to your local server.
-
-5. Update Django's `ALLOWED_HOSTS` in settings.py to include ngrok URLs:
-   ```python
-   ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.ngrok.io']
+   Or use the provided script:
+   ```
+   ./start_ngrok.sh
    ```
 
-6. Access your application using the ngrok URL.
+4. ngrok will provide a public URL that forwards to your local server.
+
+5. Access your application using the ngrok URL.
 
 Note: Free ngrok accounts have certain limitations, including session expiration and URL changes between sessions.
