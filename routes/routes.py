@@ -84,3 +84,44 @@ def all_cars():
         "count": car_count,
         "sample": cars[:5] if cars else []
     })
+    
+@app.route('/api/get_liked_vehicles', methods=['POST'])
+def get_liked_vehicles():
+    """
+    return liked vehicles with pagination
+    body: {
+        "user_id": 1,
+        "page": 1,
+        "limit": 10
+    }
+    """
+    data = request.get_json()
+    user_id = data.get('user_id')
+    page = data.get('page', 1)
+    limit = data.get('limit', 10)
+    
+    if not user_id:
+        return jsonify({
+            "status": "error",
+            "message": "User ID is required"
+        }), 400
+    
+    liked_vehicles = user_controller.get_liked_vehicles(user_id)
+    
+    if not liked_vehicles:
+        return jsonify({
+            "status": "success",
+            "message": "No liked vehicles found",
+            "data": []
+        })
+    
+    # Pagination logic
+    start = (page - 1) * limit
+    end = start + limit
+    paginated_vehicles = liked_vehicles[start:end]
+    
+    return jsonify({
+        "status": "success",
+        "liked_vehicles": paginated_vehicles,
+        "total_count": len(liked_vehicles)
+    })
