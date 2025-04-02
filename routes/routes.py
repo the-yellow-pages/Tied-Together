@@ -118,7 +118,7 @@ def get_liked_vehicles():
     # Pagination logic
     start = (page - 1) * limit
     end = start + limit
-    paginated_vehicles = liked_vehicles[start:end]
+    paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
     
     return jsonify({
         "status": "success",
