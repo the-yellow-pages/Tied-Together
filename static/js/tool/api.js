@@ -56,6 +56,37 @@ export async function recordDislike(candidateId) {
     }
 }
 
+// Fetch liked vehicles with pagination
+export async function fetchLikedVehicles(userId, page = 1, limit = 10) {
+    try {
+        const response = await fetch('/api/get_liked_vehicles', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                page: page,
+                limit: limit
+            }),
+        });
+
+        const data = await response.json();
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Failed to fetch liked vehicles');
+        }
+
+        return {
+            vehicles: data.liked_vehicles || [],
+            totalCount: data.total_count || 0
+        };
+    } catch (error) {
+        console.error('Error fetching liked vehicles:', error);
+        throw error;
+    }
+}
+
 // Get CSRF token from cookies
 function getCsrfToken() {
     const name = 'csrftoken';

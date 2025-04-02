@@ -9,6 +9,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Car Tinder</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
@@ -43,8 +44,8 @@
                 <button id="dislike-btn" class="swipe-btn dislike">
                     <i class="fas fa-times"></i>
                 </button>
-                <button id="share-btn" class="swipe-btn share">
-                    <i class="fas fa-share-alt"></i>
+                <button id="favorites-btn" class="swipe-btn favorites">
+                    <i class="fas fa-star"></i>
                 </button>
                 <button id="like-btn" class="swipe-btn like">
                     <i class="fas fa-heart"></i>
@@ -60,8 +61,31 @@
             <ul>
                 <li><i class="fas fa-arrow-left"></i> Left arrow / Swipe left = Don't like</li>
                 <li><i class="fas fa-arrow-right"></i> Right arrow / Swipe right = Like</li>
-                <li><i class="fas fa-share-alt"></i> Share button = Share car via Telegram</li>
+                <li><i class="fas fa-star"></i> Star button = View your liked vehicles</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Liked Vehicles Modal -->
+    <div id="liked-vehicles-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Your Favorite Vehicles</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="liked-vehicles-container" class="liked-vehicles-container">
+                    <!-- Vehicles will be loaded here -->
+                    <div class="loading-indicator">Loading your favorites...</div>
+                </div>
+                <div class="pagination-controls">
+                    <button id="prev-page" class="pagination-btn" disabled><i class="fas fa-chevron-left"></i>
+                        Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button id="next-page" class="pagination-btn" disabled>Next <i
+                            class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 

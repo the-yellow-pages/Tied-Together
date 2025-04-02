@@ -2,13 +2,16 @@
 let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
-import { loadTelegramScript, initTelegramWebApp, shareFavoriteCar, getUserInfo } from '/static/js/tool/telegram.js'
-import { fetchNextCandidate, recordLike, recordDislike } from '/static/js/tool/api.js';
+import { loadTelegramScript, initTelegramWebApp, getUserInfo } from '/static/js/tool/telegram.js'
+import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles } from '/static/js/tool/api.js';
 
 let tg = null;
 let telegramConnected = false;
 let tgUser = null;
-
+// Pagination state for liked vehicles
+let currentPage = 1;
+let totalPages = 1;
+let itemsPerPage = 5;
 
 const wordCard = document.getElementById('word-display');
 const candidateWordElement = document.getElementById('candidate-word');
@@ -36,6 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("telegram not loaded");
         updateGreeting();
     }
+
+    // Setup modal listeners
+    setupModalListeners();
+
     getNextCandidate();
 });
 
@@ -338,20 +345,169 @@ function getCsrfToken() {
 // Add button event listeners
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
-document.getElementById('share-btn').addEventListener('click', shareCurrentCar);
+document.getElementById('favorites-btn').addEventListener('click', openLikedVehiclesModal);
 
-// Add image navigation event listenersd event listener and merge its content
-document.addEventListener('DOMContentLoaded', () => {
-    // Add event listeners for image navigation
-    document.getElementById('left-nav').addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering card swipe
-        navigateImages('prev');
-    });
+// Remove the old share button listener that no longer exists and isn't needed
+// document.getElementById('share-btn').addEventListener('click', shareCurrentCar);
 
-    document.getElementById('right-nav').addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering card swipe
-        navigateImages('next');
-    });
-
-    getNextCandidate();
+// Fix the event listeners for image navigation - move them out of the DOMContentLoaded
+// handler that would cause them to be registered twice
+document.getElementById('left-nav').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering card swipe
+    navigateImages('prev');
 });
+
+document.getElementById('right-nav').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering card swipe
+    navigateImages('next');
+});
+
+// Clean up the duplicate DOMContentLoaded event listener that was causing conflicts
+// Remove this duplicate listener that was added in the previous update
+// document.addEventListener('DOMContentLoaded', () => {
+//     // Add event listeners for image navigation
+//     document.getElementById('left-nav').addEventListener('click', (e) => {
+//         e.stopPropagation(); // Prevent triggering card swipe
+//         navigateImages('prev');
+//     });
+// 
+//     document.getElementById('right-nav').addEventListener('click', (e) => {
+//         e.stopPropagation(); // Prevent triggering card swipe
+//         navigateImages('next');
+//     });
+// 
+//     getNextCandidate();
+// });
+
+// Setup modal event listeners
+function setupModalListeners() {
+    const modal = document.getElementById('liked-vehicles-modal');
+    const favoritesBtn = document.getElementById('favorites-btn');
+    const closeButton = document.querySelector('.close-modal');
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+
+    // Open modal when favorites button is clicked
+    favoritesBtn.addEventListener('click', () => {
+        openLikedVehiclesModal();
+    });
+
+    // Close modal when X is clicked
+    closeButton.addEventListener('click', () => {
+        modal.classList.remove('show');
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+
+    // Pagination controls
+    prevButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadLikedVehicles();
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadLikedVehicles();
+        }
+    });
+}
+
+// Function to open the modal and load liked vehicles
+async function openLikedVehiclesModal() {
+    const modal = document.getElementById('liked-vehicles-modal');
+    modal.classList.add('show');
+
+    // Reset to first page when opening
+    currentPage = 1;
+    loadLikedVehicles();
+}
+
+// Load liked vehicles with pagination
+async function loadLikedVehicles() {
+    if (!tgUser) {
+        showNoFavoritesMessage("Please connect with Telegram to view your favorites");
+        return;
+    }
+
+    const container = document.getElementById('liked-vehicles-container');
+    const pageInfo = document.getElementById('page-info');
+    const prevButton = document.getElementById('prev-page');
+    const nextButton = document.getElementById('next-page');
+
+    // Show loading state
+    container.innerHTML = '<div class="loading-indicator">Loading your favorites...</div>';
+
+    try {
+        const result = await fetchLikedVehicles(tgUser.id, currentPage, itemsPerPage);
+        const { vehicles, totalCount } = result;
+
+        // Calculate total pages
+        totalPages = Math.ceil(totalCount / itemsPerPage);
+
+        // Update pagination UI
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages || totalPages === 0;
+
+        // Display vehicles or no results message
+        if (vehicles && vehicles.length > 0) {
+            container.innerHTML = '';
+            vehicles.forEach(vehicle => {
+                container.appendChild(createVehicleCard(vehicle));
+            });
+        } else {
+            showNoFavoritesMessage("You haven't liked any vehicles yet");
+        }
+    } catch (error) {
+        console.error('Error loading liked vehicles:', error);
+        container.innerHTML = '<div class="no-favorites">Error loading favorites. Please try again.</div>';
+    }
+}
+
+// Create a vehicle card element
+function createVehicleCard(vehicle) {
+    const card = document.createElement('div');
+    card.className = 'vehicle-card';
+
+    // Determine image URL (use the first image or a placeholder)
+    const imageUrl = vehicle.image_url ||
+        (vehicle.all_images && vehicle.all_images.length > 0 ?
+            vehicle.all_images[0] : '/static/img/no-image.jpg');
+
+    // Create HTML for vehicle card
+    card.innerHTML = `
+        <div class="vehicle-image" style="background-image: url('${imageUrl}')"></div>
+        <div class="vehicle-details">
+            <h3 class="vehicle-title">${vehicle.title || 'Unnamed Vehicle'}</h3>
+            <p class="vehicle-price">${formatPrice(vehicle.price, vehicle.currency)}</p>
+            <p class="vehicle-specs">${getVehicleSpecs(vehicle)}</p>
+        </div>
+    `;
+
+    return card;
+}
+
+// Helper to format vehicle specs for display
+function getVehicleSpecs(vehicle) {
+    let specs = [];
+    if (vehicle.first_registration) specs.push(`${vehicle.first_registration}`);
+    if (vehicle.mileage) specs.push(vehicle.mileage);
+    if (vehicle.fuel_type) specs.push(vehicle.fuel_type);
+    if (vehicle.transmission) specs.push(vehicle.transmission);
+
+    return specs.join(' • ') || 'No specifications available';
+}
+
+// Show message when no favorites are available
+function showNoFavoritesMessage(message) {
+    const container = document.getElementById('liked-vehicles-container');
+    container.innerHTML = `<div class="no-favorites">${message}</div>`;
+}
