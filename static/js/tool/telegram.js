@@ -1,3 +1,5 @@
+import { authorizeWithTelegram } from '/static/js/tool/api.js';
+
 // Load Telegram WebApp script dynamically
 export function loadTelegramScript(tg) {
     return new Promise((resolve, reject) => {
@@ -81,7 +83,33 @@ export function getUserInfo(tg) {
         return null;
     }
     try {
-        const { id, first_name, last_name, username } = window.Telegram.WebApp.initDataUnsafe.user;
+        // const { id, first_name, last_name, username } = window.Telegram.WebApp.initDataUnsafe.user;
+        // Example URL-encoded query string
+        // const queryString = window.Telegram.WebView.initParams.tgWebAppData;
+        // const params = new URLSearchParams(queryString);
+
+        // Parse the query string
+        const params = new URLSearchParams(tg.initData);
+        authorizeWithTelegram(tg.initData);
+
+        // Extract the "user" parameter and decode it
+        const userEncoded = params.get("user");
+        const userDecoded = JSON.parse(decodeURIComponent(userEncoded));
+        const { id, first_name, last_name, username } = userDecoded;
+
+        const chat_instance = params.get("chat_instance");
+        const auth_date = params.get("auth_date");
+        const hash = params.get("hash");
+        const signature = params.get("signature");
+        // Log all parameters from the URLSearchParams
+        console.log("All URL parameters:");
+        params.forEach((value, key) => {
+            console.log(`${key}: ${value}`);
+        });
+        // Log the resulting object
+        for (const [key, value] in params.entries()) {
+            console.log(key, value);
+        }
         return {
             id,
             first_name,

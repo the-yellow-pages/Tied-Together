@@ -3,7 +3,7 @@ let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
 import { loadTelegramScript, initTelegramWebApp, getUserInfo } from '/static/js/tool/telegram.js'
-import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles } from '/static/js/tool/api.js';
+import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram } from '/static/js/tool/api.js';
 
 let tg = null;
 let telegramConnected = false;

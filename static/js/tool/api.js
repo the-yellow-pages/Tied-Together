@@ -87,6 +87,42 @@ export async function fetchLikedVehicles(userId, page = 1, limit = 10) {
     }
 }
 
+// Authorize Telegram Mini App data
+export async function authorizeWithTelegram(initData) {
+    try {
+        // Parse the initData query string into an object if it's a string
+        let dataToSend = initData;
+        if (typeof initData === 'string') {
+            dataToSend = Object.fromEntries(new URLSearchParams(initData));
+        }
+
+        const response = await fetch('/api/authorize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify(dataToSend),
+        });
+
+        const data = await response.json();
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Authorization failed');
+        }
+
+        return {
+            success: true,
+            user: data.user
+        };
+    } catch (error) {
+        console.error('Error during Telegram authorization:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
+
 // Get CSRF token from cookies
 function getCsrfToken() {
     const name = 'csrftoken';
