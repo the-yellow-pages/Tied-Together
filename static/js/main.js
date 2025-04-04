@@ -181,7 +181,7 @@ async function likeWord() {
             wordCard.classList.add('swiped-right');
 
             // Make API request
-            await recordLike(tgUser, currentCandidate.id);
+            await recordLike(tgUser, currentCandidate.id, tg?.initData);
             feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
@@ -208,7 +208,7 @@ async function dislikeWord() {
             wordCard.classList.add('swiped-left');
 
             // Make API request
-            await recordDislike(currentCandidate.id);
+            await recordDislike(currentCandidate.id, tg?.initData);
             feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
@@ -446,7 +446,7 @@ async function loadLikedVehicles() {
     container.innerHTML = '<div class="loading-indicator">Loading your favorites...</div>';
 
     try {
-        const result = await fetchLikedVehicles(tgUser.id, currentPage, itemsPerPage);
+        const result = await fetchLikedVehicles(tgUser.id, currentPage, itemsPerPage, tg?.initData);
         const { vehicles, totalCount } = result;
 
         // Calculate total pages

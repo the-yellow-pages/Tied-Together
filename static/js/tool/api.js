@@ -14,8 +14,11 @@ export async function fetchNextCandidate() {
 }
 
 // Record a like action for a candidate
-export async function recordLike(user, candidateId) {
+export async function recordLike(user, candidateId, initData) {
     try {
+        // Parse the initData if it's a string
+        const auth_object = prepareAuthData(initData);
+
         const response = await fetch('/api/goodswipe', {
             method: 'POST',
             headers: {
@@ -26,6 +29,7 @@ export async function recordLike(user, candidateId) {
                 user,
                 candidateId,
                 action: 'like',
+                auth_object
             }),
         });
         return await response.json();
@@ -36,8 +40,11 @@ export async function recordLike(user, candidateId) {
 }
 
 // Record a dislike action for a candidate
-export async function recordDislike(candidateId) {
+export async function recordDislike(candidateId, initData) {
     try {
+        // Parse the initData if it's a string
+        const auth_object = prepareAuthData(initData);
+
         const response = await fetch('/api/badswipe', {
             method: 'POST',
             headers: {
@@ -47,6 +54,7 @@ export async function recordDislike(candidateId) {
             body: JSON.stringify({
                 candidateId,
                 action: 'dislike',
+                auth_object
             }),
         });
         return await response.json();
@@ -57,8 +65,11 @@ export async function recordDislike(candidateId) {
 }
 
 // Fetch liked vehicles with pagination
-export async function fetchLikedVehicles(userId, page = 1, limit = 10) {
+export async function fetchLikedVehicles(userId, page = 1, limit = 10, initData) {
     try {
+        // Parse the initData if it's a string
+        const auth_object = prepareAuthData(initData);
+
         const response = await fetch('/api/get_liked_vehicles', {
             method: 'POST',
             headers: {
@@ -68,7 +79,8 @@ export async function fetchLikedVehicles(userId, page = 1, limit = 10) {
             body: JSON.stringify({
                 user_id: userId,
                 page: page,
-                limit: limit
+                limit: limit,
+                auth_object
             }),
         });
 
@@ -121,6 +133,15 @@ export async function authorizeWithTelegram(initData) {
             error: error.message
         };
     }
+}
+
+// Helper function to prepare auth data for API requests
+export function prepareAuthData(initData) {
+    let auth_object = initData;
+    if (typeof initData === 'string') {
+        auth_object = Object.fromEntries(new URLSearchParams(initData));
+    }
+    return auth_object;
 }
 
 // Get CSRF token from cookies

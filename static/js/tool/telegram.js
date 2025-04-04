@@ -1,5 +1,3 @@
-import { authorizeWithTelegram } from '/static/js/tool/api.js';
-
 // Load Telegram WebApp script dynamically
 export function loadTelegramScript(tg) {
     return new Promise((resolve, reject) => {
@@ -90,7 +88,6 @@ export function getUserInfo(tg) {
 
         // Parse the query string
         const params = new URLSearchParams(tg.initData);
-        authorizeWithTelegram(tg.initData);
 
         // Extract the "user" parameter and decode it
         const userEncoded = params.get("user");

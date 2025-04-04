@@ -7,26 +7,98 @@ import hmac
 import hashlib
 import time
 import os
+from functools import wraps
+
 
 
 # Initialize the car controller
 car_controller = CarController()
 user_controller = UserController()
 
+def require_auth(f):
+    """
+    Decorator for routes that require Telegram authentication
+    Validates the integrity of the data using the hash parameter
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        data = request.get_json()
+        
+        if not data or 'auth_object' not in data:
+            return jsonify({
+                "status": "error",
+                "message": "Missing required parameters"
+            }), 400
+        
+        auth_object = data.pop('auth_object')
+        received_hash = auth_object.pop('hash')
+        
+        app.logger.info("________Received goodswipe data______")
+        app.logger.info(auth_object)
+        app.logger.info("__________________________________________")
+        
+        
+        # Create data check string by sorting alphabetically and joining with \n
+        data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted(auth_object.items())])
+        app.logger.info(f"Data check string: {data_check_string}")
+        
+        # Get bot token from environment variable
+        bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+        if not bot_token:
+            return jsonify({
+                "status": "error",
+                "message": "Bot token not configured"
+            }), 500
+        
+        # Create secret key
+        secret_key = hmac.new(
+            key=b"WebAppData",
+            msg=bot_token.encode(),
+            digestmod=hashlib.sha256
+        ).digest()
+        
+        # Calculate hash
+        calculated_hash = hmac.new(
+            key=secret_key,
+            msg=data_check_string.encode(),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+        
+        # Validate hash
+        if calculated_hash != received_hash:
+            return jsonify({
+                "status": "error",
+                "message": "Data integrity check failed"
+            }), 401
+        
+        # Validate auth_date (optional: check if not older than 24 hours)
+        auth_date = int(auth_object.get('auth_date', 0))
+        current_time = int(time.time())
+        if current_time - auth_date > 86400:  # 24 hours
+            return jsonify({
+                "status": "error",
+                "message": "Authorization data is outdated"
+            }), 401
+        
+        # Pass the authenticated data to the decorated function
+        return f(data, *args, **kwargs)
+    
+    return decorated_function
+
 @app.route('/')
 def index():
     """
     Serves the index.html template
     """
+    app.logger.info("Rendering index.html")
     return render_template('index.html')
 
 @app.route('/api/goodswipe', methods=['POST'])
-def goodswipe():
+@require_auth
+def goodswipe(data):
     """
     API endpoint for handling a positive swipe
-    load
     """
-    data = request.get_json()
     user = data.get('user')
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
@@ -44,11 +116,11 @@ def goodswipe():
     }), 400
 
 @app.route('/api/badswipe', methods=['POST'])
-def badswipe():
+@require_auth
+def badswipe(data):
     """
     API endpoint for handling a negative swipe
     """
-    data = request.get_json()
     # Process the negative swipe data
     # For demonstration, just return a success message
     return jsonify({
@@ -91,7 +163,8 @@ def all_cars():
     })
     
 @app.route('/api/get_liked_vehicles', methods=['POST'])
-def get_liked_vehicles():
+@require_auth
+def get_liked_vehicles(data):
     """
     return liked vehicles with pagination
     body: {
@@ -100,7 +173,6 @@ def get_liked_vehicles():
         "limit": 10
     }
     """
-    data = request.get_json()
     user_id = data.get('user_id')
     page = data.get('page', 1)
     limit = data.get('limit', 10)
@@ -146,6 +218,9 @@ def authorize():
     }
     """
     data = request.get_json()
+    app.logger.info("________Received authorization data______")
+    app.logger.info(data)
+    app.logger.info("__________________________________________")
     
     if not data or 'hash' not in data:
         return jsonify({
