@@ -93,10 +93,14 @@ class UserController:
             return None
         
 
-    def remove_liked_vehicle(self, user_id, vehicle_id):
+    def remove_liked_vehicle(self, user_id, vehicle_id, logger):
         """
         Remove a liked vehicle for a user.
         :param user_id: int
         :param vehicle_id: int
         """
-        self.db.delete_liked_vehicle(user_id, vehicle_id)
+        try:
+            return self.db.delete_liked_vehicle(user_id, vehicle_id)
+        except Exception as e:
+            logger.error(f"Error removing liked vehicle: {e}")
+            return None

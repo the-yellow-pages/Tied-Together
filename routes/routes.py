@@ -171,6 +171,31 @@ def all_cars():
         "sample": cars[:5] if cars else []
     })
     
+@app.route('/api/remove_like', methods=['POST'])
+@require_auth
+def remove_like(data):
+    """
+    API endpoint for removing a liked vehicle
+    """
+    user = data.get('user')
+    vehicle_id = data.get('candidateId')
+    if user and vehicle_id:
+        # Add the liked vehicle to the database
+        res = user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
+        app.logger.info("________Received remove like data______")
+        app.logger.info(res)
+        app.logger.info("__________________________________________")
+        if res:
+            return jsonify({
+                "status": "success", 
+                "message": "Like removed",
+                "data": data
+            })
+    return jsonify({
+        "status": "error",
+        "message": "Invalid data"
+    }), 400
+    
 @app.route('/api/get_liked_vehicles', methods=['POST'])
 @require_auth
 def get_liked_vehicles(data):

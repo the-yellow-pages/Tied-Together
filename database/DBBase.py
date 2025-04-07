@@ -65,3 +65,12 @@ class DBBase:
         except Exception as e:
             self.connection.rollback()
             raise e
+        
+    def safely_execute_one_without_fetch(self, query, params):
+        try:
+            self.cursor.execute(query, params)
+            self.connection.commit()
+            return True
+        except Exception as e:
+            self.connection.rollback()
+            raise e

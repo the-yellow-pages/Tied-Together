@@ -228,8 +228,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         :param vehicle_id: int
         """
         q = "DELETE FROM liked_vehicles WHERE user_id = %s AND vehicle_id = %s;"
-        self.cursor.execute(q, (user_id, vehicle_id))
-        self.connection.commit()
+        return super().safely_execute_one_without_fetch(q, (user_id, vehicle_id))
         
     def create_disliked_vehicle(self, disliked_vehicle_data):
         """
