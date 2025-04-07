@@ -21,7 +21,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         q = """
         CREATE TABLE IF NOT EXISTS users (
-            id INT PRIMARY KEY,
+            id BIGINT PRIMARY KEY,
             first_name TEXT,
             last_name TEXT,
             username TEXT
@@ -41,7 +41,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         q = """
         CREATE TABLE IF NOT EXISTS liked_vehicles (
             id SERIAL PRIMARY KEY,
-            user_id INT REFERENCES users(id),
+            user_id BIGINT REFERENCES users(id),
             vehicle_id INT REFERENCES vehicles(id),
             UNIQUE(user_id, vehicle_id)
         );
@@ -60,7 +60,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         q = """
         CREATE TABLE IF NOT EXISTS disliked_vehicles (
             id SERIAL PRIMARY KEY,
-            user_id INT REFERENCES users(id),
+            user_id BIGINT REFERENCES users(id),
             vehicle_id INT REFERENCES vehicles(id),
             UNIQUE(user_id, vehicle_id)
         );
@@ -107,7 +107,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         VALUES (%s, %s, %s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(q, (user_data['id'], user_data['first_name'], user_data['last_name'], user_data['username']))
+        res = super().safely_execute_one_with_parameters(q, (user_data['id'], user_data.get('first_name', ''), user_data.get('last_name', ''), user_data.get('username', '')))
         return res[0]  # Return the ID of the newly created user
 
     def read_user(self, user_id):

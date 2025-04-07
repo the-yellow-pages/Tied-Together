@@ -56,8 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function updateGreeting() {
     const greetingElement = document.getElementById('greeting');
     if (greetingElement) {
-        if (tgUser && tgUser.username) {
-            greetingElement.innerHTML = `Hello, <span class="username">@${tgUser.username}</span>! Welcome to Car Tinder!`;
+        if (tgUser && tgUser.id) {
+            greetingElement.innerHTML = `Hello <span class="username">@${tgUser.username || tgUser.first_name || tgUser.id}</span>! Welcome to Car Tinder!`;
             greetingElement.classList.add('user-greeting');
         } else {
             greetingElement.innerHTML = 'For the best experience, please open this app in <a href="https://telegram.org/" target="_blank">Telegram</a>!';
@@ -80,7 +80,7 @@ function navigateImages(direction) {
     }
 
     // Update the image source
-    carImageElement.src = currentCandidate.all_images[currentImageIndex];
+    carImageElement.src = currentCanidate.all_images[currentImageIndex];
 
     // Show navigation indicators
     updateImageCounter();
