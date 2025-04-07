@@ -3,7 +3,7 @@ let currentCandidate = null;
 let currentImageIndex = 0;
 import { formatPrice } from '/static/js/tool/formatters.js';
 import { loadTelegramScript, initTelegramWebApp, getUserInfo } from '/static/js/tool/telegram.js'
-import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram } from '/static/js/tool/api.js';
+import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram, removeLike } from '/static/js/tool/api.js';
 
 let tg = null;
 let telegramConnected = false;
@@ -490,29 +490,73 @@ async function loadLikedVehicles() {
 function createVehicleCard(vehicle) {
     const card = document.createElement('div');
     card.className = 'vehicle-card';
+    card.dataset.id = vehicle.id; // Add the vehicle ID as a data attribute
 
     // Determine image URL (use the first image or a placeholder)
     const imageUrl = vehicle.image_url ||
         (vehicle.all_images && vehicle.all_images.length > 0 ?
             vehicle.all_images[0] : '/static/img/no-image.jpg');
 
-
     // Create HTML for vehicle card
     card.innerHTML = `
         <div class="vehicle-image" style="background-image: url('${imageUrl}')"></div>
         <div class="vehicle-details">
-            <h3 class="vehicle-title">
-                ${vehicle.source_link
+            <div class="vehicle-header">
+                <h3 class="vehicle-title">
+                    ${vehicle.source_link
             ? (`<a href="${vehicle.source_link}" target="_blank">${vehicle.title || 'Unnamed Vehicle'}</a>`)
             : (vehicle.title || 'Unnamed Vehicle')
         }
-            </h3>
+                </h3>
+                <button class="remove-vehicle-btn" aria-label="Remove from favorites">×</button>
+            </div>
             <p class="vehicle-price">${formatPrice(vehicle.price, vehicle.currency)}</p>
             <p class="vehicle-specs">${getVehicleSpecs(vehicle)}</p>
         </div>
     `;
 
+    // Add event listener for the remove button
+    const removeBtn = card.querySelector('.remove-vehicle-btn');
+    removeBtn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        try {
+            if (confirm('Remove this vehicle from your favorites?')) {
+                await removeVehicleLike(vehicle.id);
+                card.classList.add('removing');
+                setTimeout(() => {
+                    card.remove();
+                    // Check if there are no more vehicles in the container
+                    const container = document.getElementById('liked-vehicles-container');
+                    if (container.children.length === 0) {
+                        showNoFavoritesMessage("You haven't liked any vehicles yet");
+                    }
+                }, 300);
+            }
+        } catch (error) {
+            console.error('Error removing vehicle:', error);
+            alert('Failed to remove vehicle from favorites');
+        }
+    });
+
     return card;
+}
+
+// Helper function to remove a vehicle like
+async function removeVehicleLike(vehicleId) {
+    if (!tgUser) {
+        throw new Error('User not authenticated');
+    }
+
+    try {
+        const result = await removeLike(tgUser, vehicleId, tg?.initData);
+        if (result.status !== 'success') {
+            throw new Error(result.message || 'Failed to remove like');
+        }
+        return result;
+    } catch (error) {
+        console.error('Error removing like:', error);
+        throw error;
+    }
 }
 
 // Helper to format vehicle specs for display

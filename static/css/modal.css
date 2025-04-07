@@ -110,6 +110,50 @@
     padding: 10px 15px;
 }
 
+.vehicle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+.vehicle-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+}
+
+.remove-vehicle-btn {
+    background: #ff5f5f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    padding: 0;
+    margin-left: 8px;
+}
+
+.remove-vehicle-btn:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+}
+
+.vehicle-card.removing {
+    transform: translateX(100%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
 .vehicle-title {
     margin: 0 0 5px 0;
     font-size: 16px;

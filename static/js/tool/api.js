@@ -13,6 +13,32 @@ export async function fetchNextCandidate() {
     }
 }
 
+// remove previous like
+export async function removeLike(user, candidateId, initData) {
+    try {
+        // Parse the initData if it's a string
+        const auth_object = prepareAuthData(initData);
+
+        const response = await fetch('/api/remove_like', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                user,
+                candidateId,
+                action: 'remove_like',
+                auth_object
+            }),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Error removing like:', error);
+        throw error;
+    }
+}
+
 // Record a like action for a candidate
 export async function recordLike(user, candidateId, initData) {
     try {
