@@ -46,5 +46,6 @@ class CarController:
             "body_type": car.get('body_type'),
             "first_registration": car.get('first_registration'),
             "image_url": first_image,
-            "all_images": image_urls
+            "all_images": image_urls,
+            "source_link": car.get('url', ''),
         }

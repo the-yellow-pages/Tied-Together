@@ -118,7 +118,12 @@ async function getNextCandidate() {
         currentImageIndex = 0; // Reset image index for new candidate
 
         // Display the car information
-        candidateWordElement.textContent = currentCandidate.title || 'Car details not available';
+        if (currentCandidate.source_link) {
+            // Display title as a link if source_link is available
+            candidateWordElement.innerHTML = `<a href="${currentCandidate.source_link}" target="_blank">${currentCandidate.title || 'Car details not available'}</a>`;
+        } else {
+            candidateWordElement.textContent = currentCandidate.title || 'Car details not available';
+        }
         candidateIdElement.textContent = `ID: ${currentCandidate.id}`;
 
         // Set car image if available
@@ -491,11 +496,17 @@ function createVehicleCard(vehicle) {
         (vehicle.all_images && vehicle.all_images.length > 0 ?
             vehicle.all_images[0] : '/static/img/no-image.jpg');
 
+
     // Create HTML for vehicle card
     card.innerHTML = `
         <div class="vehicle-image" style="background-image: url('${imageUrl}')"></div>
         <div class="vehicle-details">
-            <h3 class="vehicle-title">${vehicle.title || 'Unnamed Vehicle'}</h3>
+            <h3 class="vehicle-title">
+                ${vehicle.source_link
+            ? (`<a href="${vehicle.source_link}" target="_blank">${vehicle.title || 'Unnamed Vehicle'}</a>`)
+            : (vehicle.title || 'Unnamed Vehicle')
+        }
+            </h3>
             <p class="vehicle-price">${formatPrice(vehicle.price, vehicle.currency)}</p>
             <p class="vehicle-specs">${getVehicleSpecs(vehicle)}</p>
         </div>
