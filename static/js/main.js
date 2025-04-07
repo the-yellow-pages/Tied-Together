@@ -24,25 +24,31 @@ const carLocationElement = document.getElementById('car-location');
 
 // Fetch the first car on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    tg = await loadTelegramScript(tg)
-    if (tg) {
+    tg = undefined;
+    try {
+        tg = await loadTelegramScript(tg)
+        if (tg.initData) {
+            telegramConnected = true; // Set the flag to true when connected
+        } else {
+            console.log("Telegram not found");
+            telegramConnected = false; // Set the flag to false if user info is not available
+        }
+    } catch (error) {
+        console.error("Error loading Telegram script:", error);
+    }
+    if (telegramConnected) {
         initTelegramWebApp(tg, telegramConnected);
-        telegramConnected = true; // Set the flag to true when connected
         console.log("Telegram loaded");
         tgUser = getUserInfo(tg);
         console.log("USER", tgUser);
-
         // Set the greeting based on user info
-        updateGreeting();
     }
     else {
         console.log("telegram not loaded");
-        updateGreeting();
     }
-
+    updateGreeting();
     // Setup modal listeners
     setupModalListeners();
-
     getNextCandidate();
 });
 
@@ -181,7 +187,9 @@ async function likeWord() {
             wordCard.classList.add('swiped-right');
 
             // Make API request
-            await recordLike(tgUser, currentCandidate.id, tg?.initData);
+            if (telegramConnected) {
+                await recordLike(tgUser, currentCandidate.id, tg?.initData);
+            }
             feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
@@ -207,10 +215,11 @@ async function dislikeWord() {
             wordCard.classList.remove('flash-red');
             wordCard.classList.add('swiped-left');
 
-            // Make API request
-            await recordDislike(tgUser, currentCandidate.id, tg?.initData);
+            // Make API request if connected to Telegram
+            if (telegramConnected) {
+                await recordDislike(tgUser, currentCandidate.id, tg?.initData);
+            }
             feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
-
             // Wait for animation to complete before getting next word
             setTimeout(getNextCandidate, 500);
         }, 300); // Match the flash animation duration
@@ -222,7 +231,7 @@ async function dislikeWord() {
 
 // Share the current car through Telegram
 function shareCurrentCar() {
-    if (currentCandidate) {
+    if (currentCandidate && telegramConnected) {
         shareFavoriteCar(tg, telegramConnected, currentCandidate);
         feedbackElement.innerHTML = `<span class="shared">Shared: ${currentCandidate.title || 'this car'}</span>`;
     } else {
