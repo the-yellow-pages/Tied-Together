@@ -48,6 +48,25 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         self.cursor.execute(q)
         self.connection.commit()
+    
+    def create_disliked_vehicles_table(self):
+        """
+        tested
+        Create disliked_vehicles table with the following columns:
+        id int,
+        user_id int,
+        vehicle_id int,
+        """
+        q = """
+        CREATE TABLE IF NOT EXISTS disliked_vehicles (
+            id SERIAL PRIMARY KEY,
+            user_id INT REFERENCES users(id),
+            vehicle_id INT REFERENCES vehicles(id),
+            UNIQUE(user_id, vehicle_id)
+        );
+        """
+        self.cursor.execute(q)
+        self.connection.commit()
         
     def check_created_tables(self):
         """
@@ -211,3 +230,17 @@ class UsersDB(DBBase):  # Inherit from DBBase
         q = "DELETE FROM liked_vehicles WHERE user_id = %s AND vehicle_id = %s;"
         self.cursor.execute(q, (user_id, vehicle_id))
         self.connection.commit()
+        
+    def create_disliked_vehicle(self, disliked_vehicle_data):
+        """
+        tested
+        Insert a new liked vehicle into the liked_vehicles table.
+        :param liked_vehicle_data: dict with keys 'user_id', 'vehicle_id'
+        """
+        q = """
+        INSERT INTO disliked_vehicles (user_id, vehicle_id)
+        VALUES (%s, %s)
+        RETURNING id;
+        """
+        res = super().safely_execute_one_with_parameters(q, (disliked_vehicle_data['user_id'], disliked_vehicle_data['vehicle_id']))
+        return res[0]  # Return the ID of the newly created liked vehicle

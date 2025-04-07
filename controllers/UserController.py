@@ -69,6 +69,29 @@ class UserController:
             print(f"Vehicle with ID {vehicle_id} already liked by user {user_id}. Error: {e}")
             return None
         
+    def add_disliked_vehicle(self, user: dict, vehicle_id):
+        """
+        tested
+        Add a disliked vehicle for a user.
+        :param user: dict with keys 'id', 'first_name', 'last_name', 'username'
+        :param vehicle_id: int
+        """
+        user_db = self.get_user(user['id'])
+        if not user_db:
+            user_id = self.create_user(user)
+        else:
+            user_id = user['id']
+        disliked_vehicle_data = {
+            'user_id': user_id,
+            'vehicle_id': vehicle_id
+        }
+        try:
+            self.db.create_disliked_vehicle(disliked_vehicle_data)
+            return disliked_vehicle_data
+        except UniqueViolation as e:
+            print(f"Vehicle with ID {vehicle_id} already disliked by user {user_id}. Error: {e}")
+            return None
+        
 
     def remove_liked_vehicle(self, user_id, vehicle_id):
         """

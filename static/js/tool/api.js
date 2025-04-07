@@ -40,7 +40,7 @@ export async function recordLike(user, candidateId, initData) {
 }
 
 // Record a dislike action for a candidate
-export async function recordDislike(candidateId, initData) {
+export async function recordDislike(user, candidateId, initData) {
     try {
         // Parse the initData if it's a string
         const auth_object = prepareAuthData(initData);
@@ -52,6 +52,7 @@ export async function recordDislike(candidateId, initData) {
                 'X-CSRFToken': getCsrfToken(),
             },
             body: JSON.stringify({
+                user,
                 candidateId,
                 action: 'dislike',
                 auth_object

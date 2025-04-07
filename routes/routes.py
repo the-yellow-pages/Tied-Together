@@ -122,12 +122,21 @@ def badswipe(data):
     API endpoint for handling a negative swipe
     """
     # Process the negative swipe data
-    # For demonstration, just return a success message
+    user = data.get('user')
+    vehicle_id = data.get('candidateId')
+    if user and vehicle_id:
+        # Add the disliked vehicle to the database
+        res = user_controller.add_disliked_vehicle(user, vehicle_id)
+        if res:
+            return jsonify({
+                "status": "success", 
+                "message": "Negative swipe recorded",
+                "data": data
+            })
     return jsonify({
-        "status": "success", 
-        "message": "Negative swipe recorded",
-        "data": data
-        })
+        "status": "error",
+        "message": "Invalid data"
+    }), 400
 
 @app.route('/api/getnextcandidate', methods=['GET'])
 def getnextcandidate():

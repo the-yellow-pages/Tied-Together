@@ -208,7 +208,7 @@ async function dislikeWord() {
             wordCard.classList.add('swiped-left');
 
             // Make API request
-            await recordDislike(currentCandidate.id, tg?.initData);
+            await recordDislike(tgUser, currentCandidate.id, tg?.initData);
             feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
