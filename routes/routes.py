@@ -138,12 +138,17 @@ def badswipe(data):
         "message": "Invalid data"
     }), 400
 
-@app.route('/api/getnextcandidate', methods=['GET'])
+@app.route('/api/getnextcandidate', methods=['POST'])
 def getnextcandidate():
     """
     API endpoint that returns a random car from the database
     """
-    car = car_controller.get_random_car()
+    data = request.get_json() or {}
+    user = data.get('user', {'id': None})
+    id = None
+    if user:
+        id = user.get('id', None)
+    car = car_controller.get_random_car(id)
     formatted_car = car_controller.format_car_for_frontend(car)
     
     if not formatted_car:

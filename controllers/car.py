@@ -5,11 +5,11 @@ class CarController:
     def __init__(self):
         self.db = VehiclesDB()
         
-    def get_random_car(self):
+    def get_random_car(self, user_id=None):
         """
         Fetch a random car from the database
         """
-        cars = self.db.get_hundred_vehicle()
+        cars = self.db.get_hundred_vehicle(user_id)
         if not cars:
             return None
         

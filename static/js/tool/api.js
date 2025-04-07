@@ -1,7 +1,16 @@
 // Fetch the next candidate from the API
-export async function fetchNextCandidate() {
+export async function fetchNextCandidate(user) {
     try {
-        const response = await fetch('/api/getnextcandidate');
+        const response = await fetch('/api/getnextcandidate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                user,
+            }),
+        });
         const data = await response.json();
         if (data.status !== 'success' || !data.candidate) {
             throw new Error('Failed to get car data');

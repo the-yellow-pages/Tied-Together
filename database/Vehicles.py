@@ -36,7 +36,7 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         return cars
     
     
-    def get_hundred_vehicle(self):
+    def get_hundred_vehicle(self, user_id=None):
         """
         Return list of 100 dicts in such fromat:
         [
@@ -79,7 +79,8 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             }
         ]
         """
-        q = f"""select * from 
+        # Base query without user filtering
+        base_query = """select * from 
             (select id as price_id, price as price_last, * from price_history ) t1
             left join (select id as vehicle_id, * from vehicles) t2
             on t1.vehicle_id=t2.vehicle_id
@@ -100,8 +101,25 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             and t3.body_type != 'OtherCar'
             and t4.pricerating != 'unk'
             and t1.post_time is not NULL
-            and t2.is_sell='unk'
-            limit 100;"""
-        cars = self.select(q)
+            and t2.is_sell='unk'"""
+            
+        # Add user-specific filtering if a user_id is not None
+        if user_id is not None:
+            # Exclude vehicles that the user has already liked or disliked
+            user_filter = """
+            and t1.vehicle_id NOT IN (
+                SELECT vehicle_id FROM liked_vehicles WHERE user_id = %s
+                UNION
+                SELECT vehicle_id FROM disliked_vehicles WHERE user_id = %s
+            )"""
+            
+            # Complete query with user filtering
+            q = base_query + user_filter + " limit 100;"
+            cars = self.select_with_parameters(q, (user_id, user_id))
+        else:
+            # Query without user filtering
+            q = base_query + " limit 100;"
+            cars = self.select(q)
+            
         return cars
 

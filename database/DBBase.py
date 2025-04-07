@@ -44,7 +44,6 @@ class DBBase:
     
         
     def select(self, q):
-        print(q)
         self.cursor.execute(q)
         output_rows = self.cursor.fetchall()
 
@@ -56,6 +55,19 @@ class DBBase:
         output_rows_dict = [dict(zip(column_names, row))
                             for row in output_rows]
         return output_rows_dict if output_rows_dict else None 
+    
+    def select_with_parameters(self, q, params):
+        self.cursor.execute(q, params)
+        output_rows = self.cursor.fetchall()
+
+        # Extract column names
+        column_names = [description[0]
+                        for description in self.cursor.description]
+
+        # Convert each row to a dictionary
+        output_rows_dict = [dict(zip(column_names, row))
+                            for row in output_rows]
+        return output_rows_dict if output_rows_dict else None
     
     def safely_execute_one_with_parameters(self, query, params):
         try:

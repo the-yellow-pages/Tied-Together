@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateGreeting();
     // Setup modal listeners
     setupModalListeners();
-    getNextCandidate();
+    getNextCandidate(tgUser);
 });
 
 // Function to update the greeting based on user info
@@ -103,7 +103,7 @@ function updateImageCounter() {
 }
 
 // Get next candidate
-async function getNextCandidate() {
+async function getNextCandidate(user) {
     try {
         // Show loading state
         candidateWordElement.textContent = "Loading...";
@@ -114,7 +114,7 @@ async function getNextCandidate() {
         carLocationElement.textContent = "";
         wordCard.classList.remove('swiped-left', 'swiped-right', 'flash-red', 'flash-green');
 
-        currentCandidate = await fetchNextCandidate();
+        currentCandidate = await fetchNextCandidate(user);
         currentImageIndex = 0; // Reset image index for new candidate
 
         // Display the car information
