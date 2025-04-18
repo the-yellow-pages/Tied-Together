@@ -1,6 +1,7 @@
 from os import getenv
 from dotenv import load_dotenv
 import psycopg2
+from psycopg2 import pool
 
 load_dotenv()
 
@@ -12,20 +13,35 @@ POSTGRES_PORT = "5432"
 
 
 class DBBase:
+    # Create a connection pool during initialization
+    connection_pool = None
+    
     def __init__(self):
-        try:
-            self.connection = psycopg2.connect(
-                user=POSTGRES_USER,
-                password=POSTGRES_PASSWORD,
-                database=POSTGRES_DB,
-                host=POSTGRES_HOST,
-                port=POSTGRES_PORT
-            )
-            print("Connection to PostgreSQL DB successful")
-        except Exception as error:
-            print(f"Error: {error}")
-            return None
+        if DBBase.connection_pool is None:
+            try:
+                DBBase.connection_pool = pool.SimpleConnectionPool(
+                    1, 10,  # min connections, max connections
+                    user=POSTGRES_USER,
+                    password=POSTGRES_PASSWORD,
+                    database=POSTGRES_DB,
+                    host=POSTGRES_HOST,
+                    port=POSTGRES_PORT
+                )
+                print("Connection pool created successfully")
+            except Exception as error:
+                print(f"Error creating connection pool: {error}")
+                raise Exception("Failed to connect to the database")
+        
+        # Get a connection from the pool
+        self.connection = DBBase.connection_pool.getconn()
         self.cursor = self.connection.cursor()
+        
+    def __del__(self):
+        """Clean up resources when object is destroyed"""
+        if hasattr(self, 'cursor') and self.cursor:
+            self.cursor.close()
+        if hasattr(self, 'connection') and self.connection and DBBase.connection_pool:
+            DBBase.connection_pool.putconn(self.connection)
         
         
     def make_dict(self, row: tuple):
