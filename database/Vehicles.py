@@ -1,3 +1,4 @@
+import json
 from database.DBBase import DBBase
 
 
@@ -44,6 +45,60 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             and t1.post_time='new'
             and t2.is_sell='unk'
             and CAST(CASE WHEN REGEXP_REPLACE(t3.cubic_capacity, '[^0-9]', '', 'g') = '' THEN '0' ELSE REGEXP_REPLACE(t3.cubic_capacity, '[^0-9]', '', 'g') END AS INTEGER)>{capacity};"""
+        cars = self.select(q)
+        return cars
+    
+    def get_filtered_cars(self, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
+        """
+        Retrieves cars with specific price and year conditions from the database.
+        Args:
+            mobile_db: Database connection object (either Mobile or MobilePostgres)
+            start_price: Minimum price of the car
+            end_price: Maximum price of the car
+            start_year: Minimum year of manufacture
+            end_year: Maximum year of manufacture
+            not_fuel_type: Fuel type to exclude from the results
+            fuel_type: Fuel type to include in the results
+        """
+        q = f"""select * from 
+            (select id as price_id, price as price_last, * from price_history ) t1
+            left join (select id as vehicle_id, * from vehicles) t2
+            on t1.vehicle_id=t2.vehicle_id
+            left join 
+            (select vehicle_id, location, first_registration, power, fuel_type, mileage, transmission, cubic_capacity, body_type from attributes) t3
+            on t1.vehicle_id=t3.vehicle_id
+            left join
+            (select vehicle_id, gross_amount, currency, net_amount,pricerating from price
+            ) t4
+            on t1.vehicle_id=t4.vehicle_id
+            left join (
+                SELECT vehicle_id, STRING_AGG(uri, ',') AS image_urls
+                FROM images
+                GROUP BY vehicle_id
+            ) t5
+            on t1.vehicle_id=t5.vehicle_id
+            where t1.post_time='new'
+            and t3.body_type != 'Van'
+            and t3.body_type != 'OtherCar'
+            and t2.is_sell='unk'
+            and t3.first_registration != ''
+        """
+        if not_fuel_type is not None:
+            q += f" and t3.fuel_type != '{not_fuel_type}'"
+        if fuel_type is not None:
+            q += f" and t3.fuel_type = '{fuel_type}'"
+        if start_year > 0:
+            q += f" and CAST(SUBSTRING(t3.first_registration, position('/' in t3.first_registration)+1, 4) AS INTEGER) >= {start_year}"
+        if end_year > 0:
+            q += f" and CAST(SUBSTRING(t3.first_registration, position('/' in t3.first_registration)+1, 4) AS INTEGER) <= {end_year}"
+        if end_price > 0:
+            q += f" and t4.gross_amount <= {end_price}"
+        if start_price > 0:
+            q += f" and t4.gross_amount >= {start_price}"
+        if limit > 0:
+            q  += " limit 100"
+        
+        q += ";"
         cars = self.select(q)
         return cars
     
