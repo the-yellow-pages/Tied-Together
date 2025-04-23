@@ -146,7 +146,7 @@ def getnextcandidate():
     data = request.get_json() or {}
     user = data.get('user', {'id': None})
     start_price = data.get('start_price', 0)
-    end_price = data.get('end_price', 5000)
+    end_price = data.get('end_price', 0)
     start_year = data.get('start_year', 0)
     end_year = data.get('end_year', 0)
     not_fuel_type = data.get('not_fuel_type', None)
@@ -157,6 +157,10 @@ def getnextcandidate():
     id = None
     if user:
         id = user.get('id', None)
+    
+    # Process not_fuel_type if it's a comma-separated string
+    if isinstance(not_fuel_type, str) and ',' in not_fuel_type:
+        not_fuel_type = not_fuel_type.split(',')
     
     cars = car_controller.get_filtered_cars(
         user_id=id,

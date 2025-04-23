@@ -1,6 +1,16 @@
 // Fetch the next batch of candidates from the API
-export async function fetchCandidates(user, limit = 10) {
+export async function fetchCandidates(user, options = {}) {
     try {
+        const {
+            limit = 10,
+            startPrice = 0,
+            endPrice = 0,
+            startYear = 0,
+            endYear = 0,
+            notFuelType = null,
+            fuelType = null
+        } = options;
+
         const response = await fetch('/api/getnextcandidate', {
             method: 'POST',
             headers: {
@@ -9,7 +19,13 @@ export async function fetchCandidates(user, limit = 10) {
             },
             body: JSON.stringify({
                 user,
-                limit
+                limit,
+                start_price: startPrice,
+                end_price: endPrice,
+                start_year: startYear,
+                end_year: endYear,
+                not_fuel_type: notFuelType,
+                fuel_type: fuelType
             }),
         });
         const data = await response.json();

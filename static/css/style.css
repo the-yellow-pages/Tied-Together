@@ -351,6 +351,142 @@ h1 {
     opacity: 0;
 }
 
+/* Filter controls styles */
+.filter-controls {
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.toggle-filters-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s;
+}
+
+.toggle-filters-btn:hover {
+    background-color: #e9ecef;
+}
+
+.filters-panel {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: none;
+}
+
+.filters-panel.show {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.filter-group {
+    margin-bottom: 15px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.price-range,
+.year-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    flex: 1;
+}
+
+.excluded-fuels {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.apply-filters-btn,
+.reset-filters-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.apply-filters-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.apply-filters-btn:hover {
+    background-color: #45a049;
+}
+
+.reset-filters-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+}
+
+.reset-filters-btn:hover {
+    background-color: #e9ecef;
+}
+
+.filter-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.filter-error.show {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Media queries for responsiveness */
 @media (max-width: 480px) {
     .container {

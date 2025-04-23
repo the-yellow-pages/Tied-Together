@@ -6,9 +6,18 @@ import { formatPrice } from '/static/js/tool/formatters.js';
 import { loadTelegramScript, initTelegramWebApp, getUserInfo } from '/static/js/tool/telegram.js'
 import { fetchCandidates, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram, removeLike } from '/static/js/tool/api.js';
 
+// Current filter state
+let currentFilters = {
+    startPrice: 0,
+    endPrice: 0,
+    startYear: 0,
+    endYear: 0,
+    excludedFuelTypes: []
+};
 let tg = null;
 let telegramConnected = false;
 let tgUser = null;
+
 // Pagination state for liked vehicles
 let currentPage = 1;
 let totalPages = 1;
@@ -50,6 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateGreeting();
     // Setup modal listeners
     setupModalListeners();
+    // Setup filter listeners
+    setupFilterListeners();
     getNextCandidate(tgUser);
 });
 
@@ -103,6 +114,174 @@ function updateImageCounter() {
     }
 }
 
+// Setup filter event listeners
+function setupFilterListeners() {
+    const toggleFiltersBtn = document.getElementById('toggle-filters');
+    const filtersPanel = document.getElementById('filters-panel');
+    const applyFiltersBtn = document.getElementById('apply-filters');
+    const resetFiltersBtn = document.getElementById('reset-filters');
+
+    // Price selection elements
+    const startPriceSelect = document.getElementById('start-price');
+    const endPriceSelect = document.getElementById('end-price');
+
+    // Year selection elements
+    const startYearSelect = document.getElementById('start-year');
+    const endYearSelect = document.getElementById('end-year');
+
+    // Excluded fuel types
+    const excludeElectricCheck = document.getElementById('exclude-electric');
+    const excludeDieselCheck = document.getElementById('exclude-diesel');
+
+    // Toggle filter panel visibility
+    toggleFiltersBtn.addEventListener('click', () => {
+        filtersPanel.classList.toggle('show');
+    });
+
+    // Validate price range when changed
+    startPriceSelect.addEventListener('change', () => {
+        validatePriceRange(startPriceSelect, endPriceSelect);
+    });
+
+    endPriceSelect.addEventListener('change', () => {
+        validatePriceRange(startPriceSelect, endPriceSelect);
+    });
+
+    // Validate year range when changed
+    startYearSelect.addEventListener('change', () => {
+        validateYearRange(startYearSelect, endYearSelect);
+    });
+
+    endYearSelect.addEventListener('change', () => {
+        validateYearRange(startYearSelect, endYearSelect);
+    });
+
+    // Apply filters
+    applyFiltersBtn.addEventListener('click', () => {
+        // Get selected values
+        const startPrice = parseInt(startPriceSelect.value);
+        const endPrice = parseInt(endPriceSelect.value);
+        const startYear = parseInt(startYearSelect.value);
+        const endYear = parseInt(endYearSelect.value);
+
+        // Build excluded fuel types array
+        const excludedFuelTypes = [];
+        if (excludeElectricCheck.checked) excludedFuelTypes.push(excludeElectricCheck.value);
+        if (excludeDieselCheck.checked) excludedFuelTypes.push(excludeDieselCheck.value);
+
+        // Update current filters
+        currentFilters = {
+            startPrice,
+            endPrice,
+            startYear,
+            endYear,
+            excludedFuelTypes
+        };
+
+        // Clear existing queue and get new candidates with filters
+        candidatesQueue = [];
+        getNextCandidate(tgUser);
+
+        // Hide the filters panel
+        filtersPanel.classList.remove('show');
+    });
+
+    // Reset filters
+    resetFiltersBtn.addEventListener('click', () => {
+        // Reset all filter controls
+        startPriceSelect.value = "0";
+        endPriceSelect.value = "0";
+        startYearSelect.value = "0";
+        endYearSelect.value = "0";
+        excludeElectricCheck.checked = false;
+        excludeDieselCheck.checked = false;
+
+        // Reset filter state
+        currentFilters = {
+            startPrice: 0,
+            endPrice: 0,
+            startYear: 0,
+            endYear: 0,
+            excludedFuelTypes: []
+        };
+
+        // Clear any validation errors
+        clearValidationErrors();
+
+        // Clear existing queue and get new candidates without filters
+        candidatesQueue = [];
+        getNextCandidate(tgUser);
+
+        // Hide the filters panel
+        filtersPanel.classList.remove('show');
+    });
+}
+
+// Function to validate price range
+function validatePriceRange(startSelect, endSelect) {
+    const startPrice = parseInt(startSelect.value);
+    const endPrice = parseInt(endSelect.value);
+
+    // Clear previous errors
+    clearValidationErrors();
+
+    // Only validate if both values are selected (not 0)
+    if (startPrice > 0 && endPrice > 0) {
+        if (startPrice >= endPrice) {
+            // Show error and reset end price
+            showValidationError('Start price must be less than end price');
+            endSelect.value = "0";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Function to validate year range
+function validateYearRange(startSelect, endSelect) {
+    const startYear = parseInt(startSelect.value);
+    const endYear = parseInt(endSelect.value);
+
+    // Clear previous errors
+    clearValidationErrors();
+
+    // Only validate if both values are selected (not 0)
+    if (startYear > 0 && endYear > 0) {
+        if (startYear >= endYear) {
+            // Show error and reset end year
+            showValidationError('Start year must be less than end year');
+            endSelect.value = "0";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Function to show validation error
+function showValidationError(message) {
+    // Find or create error element
+    let errorElement = document.querySelector('.filter-error');
+
+    if (!errorElement) {
+        errorElement = document.createElement('div');
+        errorElement.className = 'filter-error';
+        document.querySelector('.filters-panel').appendChild(errorElement);
+    }
+
+    errorElement.textContent = message;
+    errorElement.classList.add('show');
+}
+
+// Function to clear validation errors
+function clearValidationErrors() {
+    const errorElement = document.querySelector('.filter-error');
+    if (errorElement) {
+        errorElement.classList.remove('show');
+    }
+}
+
 // Get next candidate from queue or fetch new batch if empty
 async function getNextCandidate(user) {
     try {
@@ -115,11 +294,23 @@ async function getNextCandidate(user) {
         carLocationElement.textContent = "";
         wordCard.classList.remove('swiped-left', 'swiped-right', 'flash-red', 'flash-green');
 
-        // If queue is empty, fetch new batch of candidates
+        // If queue is empty, fetch new batch of candidates with current filters
         if (candidatesQueue.length === 0) {
             try {
-                candidatesQueue = await fetchCandidates(user, 50);
-                console.log(`Fetched ${candidatesQueue.length} new candidates`);
+                // Prepare not_fuel_type parameter (comma-separated string of excluded fuel types)
+                const notFuelType = currentFilters.excludedFuelTypes.length > 0
+                    ? currentFilters.excludedFuelTypes.join(',')
+                    : null;
+
+                candidatesQueue = await fetchCandidates(user, {
+                    limit: 50,
+                    startPrice: currentFilters.startPrice,
+                    endPrice: currentFilters.endPrice,
+                    startYear: currentFilters.startYear,
+                    endYear: currentFilters.endYear,
+                    notFuelType: notFuelType
+                });
+                console.log(`Fetched ${candidatesQueue.length} new candidates with filters:`, currentFilters);
             } catch (error) {
                 console.error('Error fetching candidates:', error);
                 candidateWordElement.textContent = "Error loading car data";
