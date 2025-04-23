@@ -9,6 +9,18 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         
     def select(self, q):
         return super().select(q)  # Use the parent class's select method
+    
+    def _user_filter(self, user_id):
+        """
+        Exclude vehicles that the user has already liked or disliked
+        """
+        return f"""
+            and t1.vehicle_id NOT IN (
+                SELECT vehicle_id FROM liked_vehicles WHERE user_id = {user_id}
+                UNION
+                SELECT vehicle_id FROM disliked_vehicles WHERE user_id = {user_id}
+            )
+        """
         
     def get_big_capacity(self, capacity=5000):
         q = f"""select * from 
@@ -105,21 +117,11 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             
         # Add user-specific filtering if a user_id is not None
         if user_id is not None:
-            # Exclude vehicles that the user has already liked or disliked
-            user_filter = """
-            and t1.vehicle_id NOT IN (
-                SELECT vehicle_id FROM liked_vehicles WHERE user_id = %s
-                UNION
-                SELECT vehicle_id FROM disliked_vehicles WHERE user_id = %s
-            )"""
-            
-            # Complete query with user filtering
-            q = base_query + user_filter + " limit 100;"
-            cars = self.select_with_parameters(q, (user_id, user_id))
+            q = base_query + self._user_filter(user_id) + " limit 100;"
         else:
             # Query without user filtering
             q = base_query + " limit 100;"
-            cars = self.select(q)
+        cars = self.select(q)
             
         return cars
 
