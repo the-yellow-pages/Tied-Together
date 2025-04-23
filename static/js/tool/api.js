@@ -1,3 +1,28 @@
+// Fetch the next batch of candidates from the API
+export async function fetchCandidates(user, limit = 10) {
+    try {
+        const response = await fetch('/api/getnextcandidate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                user,
+                limit
+            }),
+        });
+        const data = await response.json();
+        if (data.status !== 'success' || !data.candidates) {
+            throw new Error('Failed to get car data');
+        }
+        return data.candidates;
+    } catch (error) {
+        console.error('Error fetching candidates:', error);
+        throw error;
+    }
+}
+
 // Fetch the next candidate from the API
 export async function fetchNextCandidate(user) {
     try {

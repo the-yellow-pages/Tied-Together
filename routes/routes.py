@@ -12,8 +12,6 @@ from functools import wraps
 
 
 # Initialize the car controller
-car_controller = CarController()
-user_controller = UserController()
 
 def require_auth(f):
     """
@@ -101,6 +99,7 @@ def goodswipe(data):
     """
     user = data.get('user')
     vehicle_id = data.get('candidateId')
+    user_controller = UserController()
     if user and vehicle_id:
         # Add the liked vehicle to the database
         res = user_controller.add_liked_vehicle(user, vehicle_id)
@@ -126,6 +125,7 @@ def badswipe(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the disliked vehicle to the database
+        user_controller = UserController()
         res = user_controller.add_disliked_vehicle(user, vehicle_id)
         if res:
             return jsonify({
@@ -141,17 +141,35 @@ def badswipe(data):
 @app.route('/api/getnextcandidate', methods=['POST'])
 def getnextcandidate():
     """
-    API endpoint that returns a random car from the database
+    API endpoint that returns a batch of filtered cars from the database
     """
     data = request.get_json() or {}
     user = data.get('user', {'id': None})
+    start_price = data.get('start_price', 0)
+    end_price = data.get('end_price', 5000)
+    start_year = data.get('start_year', 0)
+    end_year = data.get('end_year', 0)
+    not_fuel_type = data.get('not_fuel_type', None)
+    fuel_type = data.get('fuel_type', None)
+    limit = data.get('limit', 10)
+    car_controller = CarController()
+    
     id = None
     if user:
         id = user.get('id', None)
-    car = car_controller.get_random_car(id)
-    formatted_car = car_controller.format_car_for_frontend(car)
     
-    if not formatted_car:
+    cars = car_controller.get_filtered_cars(
+        user_id=id,
+        start_price=start_price,
+        end_price=end_price,
+        start_year=start_year,
+        end_year=end_year,
+        limit=limit,
+        not_fuel_type=not_fuel_type,
+        fuel_type=fuel_type
+    )
+    
+    if not cars:
         return jsonify({
             "status": "error",
             "message": "No cars available"
@@ -159,7 +177,7 @@ def getnextcandidate():
     
     return jsonify({
         "status": "success",
-        "candidate": formatted_car
+        "candidates": cars
     })
 
 @app.route('/api/all_cars', methods=['GET'])
@@ -167,6 +185,7 @@ def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
+    car_controller = CarController()
     cars = car_controller.db.get_hundred_vehicle()
     car_count = len(cars) if cars else 0
     
@@ -186,6 +205,7 @@ def remove_like(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the liked vehicle to the database
+        user_controller = UserController()
         res = user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
         app.logger.info("________Received remove like data______")
         app.logger.info(res)
@@ -221,6 +241,7 @@ def get_liked_vehicles(data):
             "status": "error",
             "message": "User ID is required"
         }), 400
+    user_controller = UserController()
     
     liked_vehicles = user_controller.get_liked_vehicles(user_id)
     
@@ -234,6 +255,7 @@ def get_liked_vehicles(data):
     # Pagination logic
     start = (page - 1) * limit
     end = start + limit
+    car_controller = CarController()
     paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
     
     return jsonify({

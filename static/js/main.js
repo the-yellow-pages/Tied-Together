@@ -1,9 +1,10 @@
 // Current candidate data
 let currentCandidate = null;
 let currentImageIndex = 0;
+let candidatesQueue = []; // Array to store batch of candidates
 import { formatPrice } from '/static/js/tool/formatters.js';
 import { loadTelegramScript, initTelegramWebApp, getUserInfo } from '/static/js/tool/telegram.js'
-import { fetchNextCandidate, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram, removeLike } from '/static/js/tool/api.js';
+import { fetchCandidates, recordLike, recordDislike, fetchLikedVehicles, authorizeWithTelegram, removeLike } from '/static/js/tool/api.js';
 
 let tg = null;
 let telegramConnected = false;
@@ -80,7 +81,7 @@ function navigateImages(direction) {
     }
 
     // Update the image source
-    carImageElement.src = currentCanidate.all_images[currentImageIndex];
+    carImageElement.src = currentCandidate.all_images[currentImageIndex];
 
     // Show navigation indicators
     updateImageCounter();
@@ -102,7 +103,7 @@ function updateImageCounter() {
     }
 }
 
-// Get next candidate
+// Get next candidate from queue or fetch new batch if empty
 async function getNextCandidate(user) {
     try {
         // Show loading state
@@ -114,8 +115,28 @@ async function getNextCandidate(user) {
         carLocationElement.textContent = "";
         wordCard.classList.remove('swiped-left', 'swiped-right', 'flash-red', 'flash-green');
 
-        currentCandidate = await fetchNextCandidate(user);
-        currentImageIndex = 0; // Reset image index for new candidate
+        // If queue is empty, fetch new batch of candidates
+        if (candidatesQueue.length === 0) {
+            try {
+                candidatesQueue = await fetchCandidates(user, 50);
+                console.log(`Fetched ${candidatesQueue.length} new candidates`);
+            } catch (error) {
+                console.error('Error fetching candidates:', error);
+                candidateWordElement.textContent = "Error loading car data";
+                feedbackElement.textContent = 'Failed to fetch cars';
+                return;
+            }
+        }
+
+        // Get the next candidate from the queue
+        if (candidatesQueue.length > 0) {
+            currentCandidate = candidatesQueue.shift();
+            currentImageIndex = 0; // Reset image index for new candidate
+        } else {
+            // No candidates available
+            candidateWordElement.textContent = "No more cars available";
+            return;
+        }
 
         // Display the car information
         if (currentCandidate.source_link) {

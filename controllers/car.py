@@ -1,10 +1,11 @@
 from database.Vehicles import VehiclesDB
 import random
 
+
 class CarController:
     def __init__(self):
         self.db = VehiclesDB()
-        
+
     def get_random_car(self, user_id=None):
         """
         Fetch a random car from the database
@@ -12,16 +13,35 @@ class CarController:
         cars = self.db.get_hundred_vehicle(user_id)
         if not cars:
             return None
-        
+
         return random.choice(cars)
-    
+
+    def get_filtered_cars(self,
+                          user_id,
+                          start_price=0,
+                          end_price=0,
+                          start_year=0,
+                          end_year=0,
+                          limit=10,
+                          not_fuel_type=None,
+                          fuel_type=None
+                          ):
+        """
+        Fetch cars from the database based on specific filters
+        """
+        cars = self.db.get_filtered_cars(
+            user_id, start_price, end_price, start_year, end_year, limit, not_fuel_type, fuel_type)
+        if not cars:
+            return None
+        return [self.format_car_for_frontend(car) for car in cars]
+
     def format_car_for_frontend(self, car):
         """
         Format car data for frontend display
         """
         if not car:
             return None
-            
+
         # Extract the first image URL from the comma-separated list
         image_urls = []
         if car.get('image_urls'):
@@ -31,9 +51,9 @@ class CarController:
                 for image in car.get('image_urls', '').split(',')
                 if image.strip()  # Skip empty strings
             ]
-        
+
         first_image = image_urls[0] if image_urls else None
-            
+
         return {
             "id": car.get('vehicle_id'),
             "title": car.get('title'),

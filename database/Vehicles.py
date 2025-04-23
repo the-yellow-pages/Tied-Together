@@ -48,7 +48,7 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         cars = self.select(q)
         return cars
     
-    def get_filtered_cars(self, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
+    def get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
         """
         Retrieves cars with specific price and year conditions from the database.
         Args:
@@ -87,6 +87,8 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             q += f" and t3.fuel_type != '{not_fuel_type}'"
         if fuel_type is not None:
             q += f" and t3.fuel_type = '{fuel_type}'"
+        if user_id is not None:
+            q += self._user_filter(user_id)
         if start_year > 0:
             q += f" and CAST(SUBSTRING(t3.first_registration, position('/' in t3.first_registration)+1, 4) AS INTEGER) >= {start_year}"
         if end_year > 0:
@@ -96,7 +98,10 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         if start_price > 0:
             q += f" and t4.gross_amount >= {start_price}"
         if limit > 0:
+            q  += f" limit {limit}"
+        else:
             q  += " limit 100"
+        
         
         q += ";"
         cars = self.select(q)
