@@ -1,12 +1,9 @@
-from database.Vehicles import VehiclesDB
 
-
-
-def test_vehiclesdb():
+def test_vehiclesdb(vehicles_db):
     """
     Test the VehiclesDB class.
     """
-    db = VehiclesDB()
+    db = vehicles_db
     
     # Test get_big_capacity method
     result = db.get_big_capacity(3000)
