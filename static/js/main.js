@@ -313,8 +313,27 @@ async function getNextCandidate(user) {
                 console.log(`Fetched ${candidatesQueue.length} new candidates with filters:`, currentFilters);
             } catch (error) {
                 console.error('Error fetching candidates:', error);
-                candidateWordElement.textContent = "Error loading car data";
-                feedbackElement.textContent = 'Failed to fetch cars';
+
+                // Check if the error message is "No cars available"
+                if (error.message === 'No cars available') {
+                    candidateWordElement.textContent = "No cars available with this filter";
+                    feedbackElement.innerHTML = `<span class="filter-warning">Try different filter settings</span>`;
+
+                    // Create a dummy car image with filter error message
+                    carImageElement.src = '/static/img/no-image.jpg';
+                    carImageElement.alt = 'No cars available';
+
+                    // Hide navigation controls
+                    document.getElementById('left-nav').style.display = 'none';
+                    document.getElementById('right-nav').style.display = 'none';
+                    document.getElementById('image-counter').style.display = 'none';
+
+                    // Show the filters panel to allow user to change filters
+                    document.getElementById('filters-panel').classList.add('show');
+                } else {
+                    candidateWordElement.textContent = "Error loading car data";
+                    feedbackElement.textContent = 'Failed to fetch cars';
+                }
                 return;
             }
         }

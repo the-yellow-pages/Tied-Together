@@ -356,24 +356,37 @@ h1 {
     margin-bottom: 20px;
     width: 100%;
     max-width: 600px;
+    position: relative;
 }
 
 .toggle-filters-btn {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-size: 14px;
+    width: 100%;
+    max-width: 400px;
+    /* Same as swipe-card max-width */
+    height: auto;
+    padding: 10px 0;
+    margin: 0 auto 15px auto;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s;
+    gap: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    background-color: #3498db;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-filters-btn:hover {
-    background-color: #e9ecef;
+    background-color: #2980b9;
+}
+
+.toggle-filters-btn i {
+    font-size: 1.2rem;
 }
 
 .filters-panel {

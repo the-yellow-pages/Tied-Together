@@ -28,10 +28,18 @@ export async function fetchCandidates(user, options = {}) {
                 fuel_type: fuelType
             }),
         });
+
         const data = await response.json();
-        if (data.status !== 'success' || !data.candidates) {
-            throw new Error('Failed to get car data');
+
+        // If response is not ok, throw an error with the message from the server
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to get car data');
         }
+
+        if (data.status !== 'success' || !data.candidates) {
+            throw new Error(data.message || 'Failed to get car data');
+        }
+
         return data.candidates;
     } catch (error) {
         console.error('Error fetching candidates:', error);
