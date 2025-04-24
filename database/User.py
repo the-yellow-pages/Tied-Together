@@ -6,10 +6,10 @@ class UsersDB(DBBase):  # Inherit from DBBase
         super().__init__()  # Call the parent class constructor
         self.tables = ['vehicles', 'attributes',
                        'contact', 'price', 'images', 'price_history']
-        
+
     def select(self, q):
         return super().select(q)  # Use the parent class's select method
-    
+
     def create_user_table(self):
         """
         tested
@@ -29,7 +29,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         self.cursor.execute(q)
         self.connection.commit()
-        
+
     def create_liked_vehicles_table(self):
         """
         tested
@@ -48,7 +48,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         self.cursor.execute(q)
         self.connection.commit()
-    
+
     def create_disliked_vehicles_table(self):
         """
         tested
@@ -67,7 +67,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         self.cursor.execute(q)
         self.connection.commit()
-        
+
     def check_created_tables(self):
         """
         tested
@@ -77,7 +77,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
         tables = self.cursor.fetchall()
         return [table[0] for table in tables]
-    
+
     def delete_user_table(self):
         """
         tested
@@ -86,7 +86,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         q = "DROP TABLE IF EXISTS users;"
         self.cursor.execute(q)
         self.connection.commit()
-        
+
     def delete_liked_vehicles_table(self):
         """
         tested
@@ -107,7 +107,8 @@ class UsersDB(DBBase):  # Inherit from DBBase
         VALUES (%s, %s, %s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(q, (user_data['id'], user_data.get('first_name', ''), user_data.get('last_name', ''), user_data.get('username', '')))
+        res = super().safely_execute_one_with_parameters(q, (user_data['id'], user_data.get(
+            'first_name', ''), user_data.get('last_name', ''), user_data.get('username', '')))
         return res[0]  # Return the ID of the newly created user
 
     def read_user(self, user_id):
@@ -153,9 +154,10 @@ class UsersDB(DBBase):  # Inherit from DBBase
         VALUES (%s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(q, (liked_vehicle_data['user_id'], liked_vehicle_data['vehicle_id']))
+        res = super().safely_execute_one_with_parameters(
+            q, (liked_vehicle_data['user_id'], liked_vehicle_data['vehicle_id']))
         return res[0]  # Return the ID of the newly created liked vehicle
-    
+
     def get_liked_vehicles(self, user_id, offset=None, limit=None):
         """
         Retrieve a liked vehicle by user_id and vehicle_id.
@@ -190,9 +192,6 @@ class UsersDB(DBBase):  # Inherit from DBBase
                 "site_id": "GERMANY",
                 "short_title": "Mercedes-Benz CLA 200",
                 "sub_title": "d 8G-DCT AMG Line+LED+CARPLAY+WIDESCREEN",
-                "has_damage": False,
-                "is_video_enabled": True,
-                "ready_to_drive": True,
                 "highlights": "60 Mon. Garantie mögl., Finanzierung mögl., Lieferung mögl.",
                 "title": "Mercedes-Benz CLA 200 d 8G-DCT AMG Line+LED+CARPLAY+WIDESCREEN",
                 "url": "https://suchen.mobile.de/auto-inserat/mercedes-benz-cla-200-d-8g-dct-amg-line-led-carplay-widescreen-elmshorn/407359999.html",
@@ -220,42 +219,28 @@ class UsersDB(DBBase):  # Inherit from DBBase
         SELECT 
     ph.id AS price_id, 
     ph.price AS price_last,
-    ph.vehicle_id,
-    ph.timestamp,
-    ph.post_time,
+    ph.vehicle_id, ph.timestamp, ph.post_time,
     v.id AS vehicle_id,
-    p.gross_amount,
-    p.currency,
-    p.net_amount,
-    p.pricerating,
-    a.location,
-    a.first_registration,
-    a.power,
-    a.fuel_type,
-    a.mileage,
-    a.transmission,
-    a.cubic_capacity,
-    a.body_type,
+    v.is_eye_catcher, v.is_new, v.num_images, v.site_id, v.short_title, v.sub_title, v.highlights, v.title, v.url, v.category, v.segment, v.is_sell,
+    p.gross_amount, p.currency, p.net_amount, p.pricerating,
+    a.location, a.first_registration, a.power, a.fuel_type, 
+    a.mileage, a.transmission, a.cubic_capacity, a.body_type,
     i.image_urls
 FROM 
-    price_history ph
-LEFT JOIN 
-    vehicles v ON ph.vehicle_id = v.id
-LEFT JOIN
-    price p ON ph.vehicle_id = p.vehicle_id
-LEFT JOIN 
-    attributes a ON ph.vehicle_id = a.vehicle_id
+    (
+        SELECT DISTINCT ON (vehicle_id) *
+        FROM price_history
+        WHERE vehicle_id = ANY(%s)
+        ORDER BY vehicle_id, timestamp DESC
+    ) ph
+LEFT JOIN vehicles v ON ph.vehicle_id = v.id
+LEFT JOIN price p ON ph.vehicle_id = p.vehicle_id
+LEFT JOIN attributes a ON ph.vehicle_id = a.vehicle_id
 LEFT JOIN (
-    SELECT 
-        vehicle_id, 
-        STRING_AGG(uri::text, ',') AS image_urls
-    FROM 
-        images 
-    GROUP BY 
-        vehicle_id
-) i ON ph.vehicle_id = i.vehicle_id
-WHERE 
-    ph.vehicle_id = ANY(%s);
+    SELECT vehicle_id, STRING_AGG(uri::text, ',') AS image_urls
+    FROM images 
+    GROUP BY vehicle_id
+) i ON ph.vehicle_id = i.vehicle_id;
         """
         self.cursor.execute(query, (all_ids,))
         return self.cursor.fetchall()
@@ -269,7 +254,7 @@ WHERE
         """
         q = "DELETE FROM liked_vehicles WHERE user_id = %s AND vehicle_id = %s;"
         return super().safely_execute_one_without_fetch(q, (user_id, vehicle_id))
-        
+
     def create_disliked_vehicle(self, disliked_vehicle_data):
         """
         tested
@@ -281,5 +266,6 @@ WHERE
         VALUES (%s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(q, (disliked_vehicle_data['user_id'], disliked_vehicle_data['vehicle_id']))
+        res = super().safely_execute_one_with_parameters(
+            q, (disliked_vehicle_data['user_id'], disliked_vehicle_data['vehicle_id']))
         return res[0]  # Return the ID of the newly created liked vehicle
