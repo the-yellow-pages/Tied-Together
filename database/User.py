@@ -217,23 +217,47 @@ class UsersDB(DBBase):  # Inherit from DBBase
         # Create the correct number of placeholders for the IN clause
         placeholders = ', '.join(['%s'] * len(all_ids))
         query = f"""
-            SELECT * FROM 
-            (SELECT id AS price_id, price AS price_last, * FROM price_history) t1
-            LEFT JOIN (SELECT id AS vehicle_id, * FROM vehicles) t2
-            ON t1.vehicle_id = t2.vehicle_id
-            LEFT JOIN
-            (SELECT vehicle_id, gross_amount, currency, net_amount, pricerating FROM price) t4
-            ON t1.vehicle_id = t4.vehicle_id
-            LEFT JOIN 
-            (SELECT vehicle_id, location, first_registration, power, fuel_type, mileage, transmission, cubic_capacity, body_type FROM attributes) t3
-            ON t1.vehicle_id = t3.vehicle_id
-            LEFT JOIN (
-                SELECT vehicle_id, STRING_AGG(uri::text, ',') AS image_urls
-                FROM images GROUP BY vehicle_id
-            ) t5 ON t1.vehicle_id = t5.vehicle_id
-            WHERE t1.vehicle_id IN ({placeholders});
+        SELECT 
+    ph.id AS price_id, 
+    ph.price AS price_last,
+    ph.vehicle_id,
+    ph.timestamp,
+    ph.post_time,
+    v.id AS vehicle_id,
+    p.gross_amount,
+    p.currency,
+    p.net_amount,
+    p.pricerating,
+    a.location,
+    a.first_registration,
+    a.power,
+    a.fuel_type,
+    a.mileage,
+    a.transmission,
+    a.cubic_capacity,
+    a.body_type,
+    i.image_urls
+FROM 
+    price_history ph
+LEFT JOIN 
+    vehicles v ON ph.vehicle_id = v.id
+LEFT JOIN
+    price p ON ph.vehicle_id = p.vehicle_id
+LEFT JOIN 
+    attributes a ON ph.vehicle_id = a.vehicle_id
+LEFT JOIN (
+    SELECT 
+        vehicle_id, 
+        STRING_AGG(uri::text, ',') AS image_urls
+    FROM 
+        images 
+    GROUP BY 
+        vehicle_id
+) i ON ph.vehicle_id = i.vehicle_id
+WHERE 
+    ph.vehicle_id = ANY(%s);
         """
-        self.cursor.execute(query, all_ids)
+        self.cursor.execute(query, (all_ids,))
         return self.cursor.fetchall()
 
     def delete_liked_vehicle(self, user_id, vehicle_id):
