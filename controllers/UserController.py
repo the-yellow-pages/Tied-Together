@@ -40,12 +40,29 @@ class UserController:
         """
         self.db.delete_user(user_id)
 
-    def get_liked_vehicles(self, user_id):
+    def get_liked_vehicles(self, user_id, page=None, limit=None):
         """
-        Retrieve all liked vehicles for a user by joining of all tables.
-        :param user_id: int
+        Retrieve the vehicles liked by a specific user with pagination support.
+        This method fetches all vehicle IDs liked by the user, applies pagination if requested,
+        and returns the detailed vehicle information as a dictionary along with the total count.
+        Args:
+            user_id (int): The ID of the user whose liked vehicles are to be retrieved.
+            page (int, optional): The page number for pagination. Defaults to None.
+            limit (int, optional): The maximum number of items per page. Defaults to None.
+        Returns:
+            tuple: A tuple containing:
+                - list: A list of dictionaries with vehicle details for the liked vehicles.
+                - int: The total number of vehicles liked by the user.
         """
-        return self.db.make_dicts(self.db.read_liked_vehicles(user_id))
+        all_ids = self.db.get_liked_vehicles(user_id)
+        offset = (page - 1) * limit if page and limit else None
+        paginated_ids = all_ids[offset:offset + limit] if offset is not None else all_ids
+        
+        # Extract the IDs from the tuples if they're in tuple format
+        if paginated_ids and isinstance(paginated_ids[0], tuple):
+            paginated_ids = [id_tuple[0] for id_tuple in paginated_ids]
+            
+        return self.db.make_dicts(self.db.read_liked_vehicles(paginated_ids)), len(all_ids)
 
     def add_liked_vehicle(self, user: dict, vehicle_id: int):
         """

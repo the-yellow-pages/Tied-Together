@@ -590,10 +590,7 @@ function getCsrfToken() {
 // Add button event listeners
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
-document.getElementById('favorites-btn').addEventListener('click', openLikedVehiclesModal);
 
-// Remove the old share button listener that no longer exists and isn't needed
-// document.getElementById('share-btn').addEventListener('click', shareCurrentCar);
 
 // Fix the event listeners for image navigation - move them out of the DOMContentLoaded
 // handler that would cause them to be registered twice

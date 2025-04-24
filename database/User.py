@@ -155,12 +155,26 @@ class UsersDB(DBBase):  # Inherit from DBBase
         """
         res = super().safely_execute_one_with_parameters(q, (liked_vehicle_data['user_id'], liked_vehicle_data['vehicle_id']))
         return res[0]  # Return the ID of the newly created liked vehicle
+    
+    def get_liked_vehicles(self, user_id, offset=None, limit=None):
+        """
+        Retrieve a liked vehicle by user_id and vehicle_id.
+        :param user_id: int
+        :param vehicle_id: int
+        """
+        q = f"SELECT vehicle_id FROM liked_vehicles WHERE user_id = {user_id} ORDER BY vehicle_id DESC"
+        if offset is not None and limit is not None:
+            q += f" LIMIT {limit} OFFSET {offset}"
+        q += ';'
+        self.cursor.execute(q)
+        return self.cursor.fetchall()
 
-    def read_liked_vehicles(self, user_id):
+    def read_liked_vehicles(self, all_ids: list):
         """
         tested
         Retrieve all liked vehicles for a user by joinig tables
         :param user_id: int
+        :param all_ids: list of vehicle_ids [id1, id2, ...]
         return: list of liked vehicles in this format:
                    [{
                 "price_id": 40830,
@@ -200,7 +214,9 @@ class UsersDB(DBBase):  # Inherit from DBBase
                 "image_urls": "img1.jpg,img2.jpg,img3.jpg"
             }
         """
-        query = """
+        # Create the correct number of placeholders for the IN clause
+        placeholders = ', '.join(['%s'] * len(all_ids))
+        query = f"""
             SELECT * FROM 
             (SELECT id AS price_id, price AS price_last, * FROM price_history) t1
             LEFT JOIN (SELECT id AS vehicle_id, * FROM vehicles) t2
@@ -215,9 +231,9 @@ class UsersDB(DBBase):  # Inherit from DBBase
                 SELECT vehicle_id, STRING_AGG(uri::text, ',') AS image_urls
                 FROM images GROUP BY vehicle_id
             ) t5 ON t1.vehicle_id = t5.vehicle_id
-            WHERE t1.vehicle_id IN (SELECT vehicle_id FROM liked_vehicles WHERE user_id = %s);
+            WHERE t1.vehicle_id IN ({placeholders});
         """
-        self.cursor.execute(query, (user_id,))
+        self.cursor.execute(query, all_ids)
         return self.cursor.fetchall()
 
     def delete_liked_vehicle(self, user_id, vehicle_id):

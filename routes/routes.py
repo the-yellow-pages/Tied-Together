@@ -247,9 +247,9 @@ def get_liked_vehicles(data):
         }), 400
     user_controller = UserController()
     
-    liked_vehicles = user_controller.get_liked_vehicles(user_id)
+    liked_vehicles, count = user_controller.get_liked_vehicles(user_id, page, limit)
     
-    if not liked_vehicles:
+    if not liked_vehicles or count == 0:
         return jsonify({
             "status": "success",
             "message": "No liked vehicles found",
@@ -257,15 +257,16 @@ def get_liked_vehicles(data):
         })
     
     # Pagination logic
-    start = (page - 1) * limit
-    end = start + limit
+    # start = (page - 1) * limit
+    # end = start + limit
     car_controller = CarController()
-    paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
+    # paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
+    paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles]
     
     return jsonify({
         "status": "success",
         "liked_vehicles": paginated_vehicles,
-        "total_count": len(liked_vehicles)
+        "total_count": count,
     })
 
 @app.route('/api/authorize', methods=['POST'])
