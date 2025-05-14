@@ -27,7 +27,7 @@ export function initTelegramWebApp(tg, telegramConnected) {
         }
 
         // Setup the main button for actions if needed
-        setupTelegramMainButton(tg, telegramConnected);
+        // setupTelegramMainButton(tg, telegramConnected);
 
         // Notify Telegram that the WebApp is ready
         tg.ready();

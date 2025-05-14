@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     else {
         console.log("telegram not loaded");
     }
-    updateGreeting();
+    // updateGreeting();
     // Setup modal listeners
     setupModalListeners();
     // Setup filter listeners
