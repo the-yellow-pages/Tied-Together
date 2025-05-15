@@ -10,15 +10,18 @@ body {
 .container {
     max-width: 600px;
     margin: 0 auto;
-    padding: 0.5rem 0.5rem 1rem 0.5rem; /* Reduced top padding from 1rem to 0.5rem */
+    padding: 0.5rem 0.5rem 1rem 0.5rem;
+    /* Reduced top padding from 1rem to 0.5rem */
 }
 
 h1 {
     color: #2c3e50;
     text-align: center;
     font-size: 2.5rem;
-    margin-bottom: 0.75rem; /* Reduced from 1.5rem to make it twice as small */
-    margin-top: 0.5rem; /* Add a small top margin */
+    margin-bottom: 0.75rem;
+    /* Reduced from 1.5rem to make it twice as small */
+    margin-top: 0.5rem;
+    /* Add a small top margin */
 }
 
 /* Greeting styles */

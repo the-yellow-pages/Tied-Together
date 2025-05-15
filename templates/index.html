@@ -15,7 +15,6 @@
 
 <body>
     <div class="container">
-        <h1>Car Tinder</h1>
 
         <!-- Standalone filter toggle button -->
         <button id="toggle-filters" class="toggle-filters-btn">
@@ -129,9 +128,14 @@
 
             <div id="swipe-feedback" class="feedback-message"></div>
         </div>
-        <div class="instructions">
+
+        <!-- Instructions Accordion Button -->
+        <button id="toggle-instructions" class="toggle-filters-btn" style="margin-bottom: 0.5rem;">
+            <i class="fas fa-info-circle"></i> Instructions
+        </button>
+        <div id="instructions-panel" class="instructions" style="display: none;">
             <h2>Instructions</h2>
-            <p>Swipe right for cars you like, swipe left for cars you don't like.</p>
+            <p>Swipe to right for cars you like, swipe left for cars you don't like.</p>
             <p>You can also tap the buttons below or use keyboard arrows:</p>
             <ul>
                 <li><i class="fas fa-arrow-left"></i> Left arrow / Swipe left = Don't like</li>
@@ -165,6 +169,20 @@
     </div>
 
     <script type="module" src="/static/js/main.js"></script>
+    <script>
+        // Accordion toggle for instructions
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('toggle-instructions');
+            const panel = document.getElementById('instructions-panel');
+            btn.addEventListener('click', function () {
+                if (panel.style.display === 'none' || panel.style.display === '') {
+                    panel.style.display = 'block';
+                } else {
+                    panel.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
