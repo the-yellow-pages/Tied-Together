@@ -1,8 +1,6 @@
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, current_app
 import random
 from app import app
-from controllers.car import CarController
-from controllers.UserController import UserController
 import hmac
 import hashlib
 import time
@@ -99,10 +97,9 @@ def goodswipe(data):
     """
     user = data.get('user')
     vehicle_id = data.get('candidateId')
-    user_controller = UserController()
     if user and vehicle_id:
         # Add the liked vehicle to the database
-        res = user_controller.add_liked_vehicle(user, vehicle_id)
+        res = current_app.user_controller.add_liked_vehicle(user, vehicle_id)
         if res:
             return jsonify({
                 "status": "success", 
@@ -125,8 +122,7 @@ def badswipe(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the disliked vehicle to the database
-        user_controller = UserController()
-        res = user_controller.add_disliked_vehicle(user, vehicle_id)
+        res = current_app.user_controller.add_disliked_vehicle(user, vehicle_id)
         if res:
             return jsonify({
                 "status": "success", 
@@ -152,7 +148,6 @@ def getnextcandidate():
     not_fuel_type = data.get('not_fuel_type', None)
     fuel_type = data.get('fuel_type', None)
     limit = data.get('limit', 10)
-    car_controller = CarController()
     
     id = None
     if user:
@@ -162,7 +157,7 @@ def getnextcandidate():
     if isinstance(not_fuel_type, str) and ',' in not_fuel_type:
         not_fuel_type = not_fuel_type.split(',')
     
-    cars = car_controller.get_filtered_cars(
+    cars = current_app.car_controller.get_filtered_cars(
         user_id=id,
         start_price=start_price,
         end_price=end_price,
@@ -189,8 +184,7 @@ def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
-    car_controller = CarController()
-    cars = car_controller.db.get_hundred_vehicle()
+    cars = current_app.car_controller.db.get_hundred_vehicle()
     car_count = len(cars) if cars else 0
     
     return jsonify({
@@ -209,8 +203,7 @@ def remove_like(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the liked vehicle to the database
-        user_controller = UserController()
-        res = user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
+        res = current_app.user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
         app.logger.info("________Received remove like data______")
         app.logger.info(res)
         app.logger.info("__________________________________________")
@@ -245,9 +238,8 @@ def get_liked_vehicles(data):
             "status": "error",
             "message": "User ID is required"
         }), 400
-    user_controller = UserController()
     
-    liked_vehicles, count = user_controller.get_liked_vehicles(user_id, page, limit)
+    liked_vehicles, count = current_app.user_controller.get_liked_vehicles(user_id, page, limit)
     
     if not liked_vehicles or count == 0:
         return jsonify({
@@ -259,9 +251,8 @@ def get_liked_vehicles(data):
     # Pagination logic
     # start = (page - 1) * limit
     # end = start + limit
-    car_controller = CarController()
-    # paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
-    paginated_vehicles = [car_controller.format_car_for_frontend(car) for car in liked_vehicles]
+    # paginated_vehicles = [current_app.car_controller.format_car_for_frontend(car) for car in liked_vehicles[start:end]]
+    paginated_vehicles = [current_app.car_controller.format_car_for_frontend(car) for car in liked_vehicles]
     
     return jsonify({
         "status": "success",

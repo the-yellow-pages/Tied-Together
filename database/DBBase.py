@@ -16,10 +16,12 @@ class DBBase:
     # Create a connection pool during initialization
     connection_pool = None
     
-    def __init__(self):
-        if DBBase.connection_pool is None:
+    @classmethod
+    def initialize_pool(cls):
+        """Initialize the connection pool if it hasn't been done yet"""
+        if cls.connection_pool is None:
             try:
-                DBBase.connection_pool = pool.SimpleConnectionPool(
+                cls.connection_pool = pool.ThreadedConnectionPool(
                     1, 10,  # min connections, max connections
                     user=POSTGRES_USER,
                     password=POSTGRES_PASSWORD,
@@ -27,12 +29,18 @@ class DBBase:
                     host=POSTGRES_HOST,
                     port=POSTGRES_PORT
                 )
-                print("Connection pool created successfully")
+                print("Threaded connection pool created successfully")
             except Exception as error:
-                print(f"Error creating connection pool: {error}")
+                print(f"Error creating threaded connection pool: {error}")
                 raise Exception("Failed to connect to the database")
-        
-        # Get a connection from the pool
+        return cls.connection_pool
+    
+    def __init__(self):
+        # Simply get a connection from the already initialized pool
+        if DBBase.connection_pool is None:
+            # This should only happen the first time any DBBase instance is created
+            DBBase.initialize_pool()
+            
         self.connection = DBBase.connection_pool.getconn()
         self.cursor = self.connection.cursor()
         
@@ -41,9 +49,10 @@ class DBBase:
         if hasattr(self, 'cursor') and self.cursor:
             self.cursor.close()
         if hasattr(self, 'connection') and self.connection and DBBase.connection_pool:
+            # Return the connection to the pool
             DBBase.connection_pool.putconn(self.connection)
-        
-        
+            self.connection = None
+            
     def make_dict(self, row: tuple):
         if not row or not len(row):
             return None

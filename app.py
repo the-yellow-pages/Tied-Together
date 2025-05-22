@@ -2,8 +2,16 @@ import os
 import random
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
+from controllers.car import CarController
+from controllers.UserController import UserController
+from celery_config import make_celery
 
 app = Flask(__name__)
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379/0',
+    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
+)
+celery = make_celery(app)
 
 # Configuration
 ALLOWED_HOSTS = [
@@ -24,8 +32,26 @@ for host in ALLOWED_HOSTS:
 # Initialize CORS with the allowed origins
 CORS(app, origins=origins)
 
+
+with app.app_context():
+    app.car_controller = CarController()
+    app.user_controller = UserController()
+    
 # Import routes
 from routes.routes import *
+
+# Example of a background task
+@celery.task()
+def process_data_task(data):
+    # Long-running operation here
+    return result
+
+# In your Flask routes, use background task for heavy operations:
+@app.route('/process')
+def process():
+    # Start the task asynchronously
+    task = process_data_task.delay(some_data)
+    return {'task_id': task.id}
 
 if __name__ == '__main__':
     # Get port from environment variable or default to 5000
