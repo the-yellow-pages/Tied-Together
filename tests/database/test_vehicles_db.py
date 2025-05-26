@@ -11,12 +11,21 @@ def test_get_big_capacity(vehicles_db):
     assert isinstance(result, list), "Expected a list of vehicles"
     assert len(result) > 0, "Expected at least one vehicle with cubic capacity greater than 3000"
     
-def test_get_filtered():
+def test_new_get_filtered():
     """
     Test the VehiclesDB class.
     """
     db = VehiclesDB()
-    result = db.get_filtered_cars()
+    result = db.new_get_filtered_cars(
+        user_id=None,
+        start_price=1000,
+        end_price=20000,
+        start_year=2000,
+        end_year=2023,
+        limit=10,
+        not_fuel_type=None,
+        fuel_type=None
+    )
     assert isinstance(result, list), "Expected a list of vehicles"
     assert len(result) > 0, "Expected at least one vehicle in the specified range"
     car = result[0]

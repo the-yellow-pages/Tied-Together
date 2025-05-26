@@ -23,6 +23,18 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             )
         """
         
+    def _new_user_filter(self, user_id):
+        """
+        Exclude vehicles that the user has already liked or disliked
+        """
+        return f"""
+            and v.id NOT IN (
+                SELECT vehicle_id FROM liked_vehicles WHERE user_id = {user_id}
+                UNION
+                SELECT vehicle_id FROM disliked_vehicles WHERE user_id = {user_id}
+            )
+        """
+        
     def get_big_capacity(self, capacity=5000):
         q = f"""select * from 
             (select id as price_id, price as price_last, * from price_history ) t1
@@ -105,6 +117,60 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         
         q += ";"
         cars = self.select(q)
+        return cars
+    
+    def new_get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
+        query = f"""
+        SELECT 
+    ph.id AS price_id, 
+    ph.price AS price_last,
+    ph.vehicle_id, ph.timestamp, ph.post_time,
+    v.id AS vehicle_id,
+    v.is_eye_catcher, v.is_new, v.num_images, v.site_id, v.short_title, v.sub_title, v.highlights, v.title, v.url, v.category, v.segment, v.is_sell, v.price AS price,
+    p.gross_amount, p.currency, p.net_amount, p.pricerating,
+    a.location, a.first_registration, a.power, a.fuel_type, 
+    a.mileage, a.transmission, a.cubic_capacity, a.body_type,
+    i.image_urls
+FROM 
+    (
+        SELECT DISTINCT ON (vehicle_id) *
+        FROM price_history
+        WHERE post_time = 'new'
+        ORDER BY vehicle_id, timestamp DESC
+    ) ph
+LEFT JOIN vehicles v ON ph.vehicle_id = v.id
+LEFT JOIN price p ON ph.vehicle_id = p.vehicle_id
+LEFT JOIN attributes a ON ph.vehicle_id = a.vehicle_id
+LEFT JOIN (
+    SELECT vehicle_id, STRING_AGG(uri::text, ',') AS image_urls
+    FROM images 
+    GROUP BY vehicle_id
+) i ON ph.vehicle_id = i.vehicle_id
+WHERE a.body_type != 'Van'
+AND a.body_type != 'OtherCar'
+AND v.is_sell = 'unk'
+AND a.first_registration != ''
+"""
+        if not_fuel_type is not None:
+            query += f" and a.fuel_type != '{not_fuel_type}'"
+        if fuel_type is not None:
+            query += f" and a.fuel_type = '{fuel_type}'"
+        if user_id is not None:
+            query += self._new_user_filter(user_id)
+        if start_year > 0:
+            query += f" and CAST(SUBSTRING(a.first_registration, position('/' in a.first_registration)+1, 4) AS INTEGER) >= {start_year}"
+        if end_year > 0:
+            query += f" and CAST(SUBSTRING(a.first_registration, position('/' in a.first_registration)+1, 4) AS INTEGER) <= {end_year}"
+        if end_price > 0:
+            query += f" and p.gross_amount <= {end_price}"
+        if start_price > 0:
+            query += f" and p.gross_amount >= {start_price}"
+        if limit > 0:
+            query += f" limit {limit}"
+        else:
+            query += " limit 100"
+        query += ";"
+        cars = self.select(query)
         return cars
     
     

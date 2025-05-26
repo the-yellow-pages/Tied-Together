@@ -29,7 +29,7 @@ class CarController:
         """
         Fetch cars from the database based on specific filters
         """
-        cars = self.db.get_filtered_cars(
+        cars = self.db.new_get_filtered_cars(
             user_id, start_price, end_price, start_year, end_year, limit, not_fuel_type, fuel_type)
         if not cars:
             return None
