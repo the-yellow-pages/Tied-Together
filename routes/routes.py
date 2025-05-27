@@ -28,23 +28,15 @@ def require_auth(f):
         
         auth_object = data.pop('auth_object')
         received_hash = auth_object.pop('hash')
-        
-        app.logger.info("________Received goodswipe data______")
-        app.logger.info(auth_object)
-        app.logger.info("__________________________________________")
-        
-        
-        # Create data check string by sorting alphabetically and joining with \n
-        data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted(auth_object.items())])
-        app.logger.info(f"Data check string: {data_check_string}")
-        
-        # Get bot token from environment variable
+        data_check_list = [f"{key}={value}" for key, value in auth_object.items()]
+        data_check_list.sort()
+        data_check_string = '\n'.join(data_check_list)
         bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
         if not bot_token:
             return jsonify({
                 "status": "error",
                 "message": "Bot token not configured"
-            }), 500
+            }, 500)
         
         # Create secret key
         secret_key = hmac.new(
@@ -53,12 +45,11 @@ def require_auth(f):
             digestmod=hashlib.sha256
         ).digest()
         
-        # Calculate hash
         calculated_hash = hmac.new(
             key=secret_key,
-            msg=data_check_string.encode(),
+            msg=data_check_string.encode(), # Use the alphabetically sorted string
             digestmod=hashlib.sha256
-        ).hexdigest()
+        ).hexdigest() # Use hexdigest() to get a hex string
         
         # Validate hash
         if calculated_hash != received_hash:
@@ -132,7 +123,7 @@ def badswipe(data):
     return jsonify({
         "status": "error",
         "message": "Invalid data"
-    }), 400
+    }, 400)
 
 @app.route('/api/getnextcandidate', methods=['POST'])
 def getnextcandidate():
@@ -336,3 +327,4 @@ def authorize():
         "message": "Authorization successful",
         "user": user_data
     })
+

@@ -164,7 +164,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         :param user_id: int
         :param vehicle_id: int
         """
-        q = f"SELECT vehicle_id FROM liked_vehicles WHERE user_id = {user_id} ORDER BY vehicle_id DESC"
+        q = f"SELECT vehicle_id FROM liked_vehicles WHERE user_id = {user_id} ORDER BY vehicle_id ASC"
         if offset is not None and limit is not None:
             q += f" LIMIT {limit} OFFSET {offset}"
         q += ';'
