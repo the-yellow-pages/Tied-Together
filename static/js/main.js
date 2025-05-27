@@ -318,6 +318,9 @@ async function getNextCandidate(user) {
                 if (error.message === 'No cars available') {
                     candidateWordElement.textContent = "No cars available with this filter";
                     feedbackElement.innerHTML = `<span class="filter-warning">Try different filter settings</span>`;
+                    setTimeout(() => {
+                        feedbackElement.textContent = '';
+                    }, 10000);
 
                     // Create a dummy car image with filter error message
                     carImageElement.src = '/static/img/no-image.jpg';
@@ -333,6 +336,9 @@ async function getNextCandidate(user) {
                 } else {
                     candidateWordElement.textContent = "Error loading car data";
                     feedbackElement.textContent = 'Failed to fetch cars';
+                    setTimeout(() => {
+                        feedbackElement.textContent = '';
+                    }, 10000);
                 }
                 return;
             }
@@ -405,6 +411,9 @@ async function getNextCandidate(user) {
         console.error('Error:', error);
         candidateWordElement.textContent = "Error loading car data";
         feedbackElement.textContent = 'Failed to fetch next car';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
     }
 }
 
@@ -426,7 +435,7 @@ async function likeWord() {
             if (telegramConnected) {
                 await recordLike(tgUser, currentCandidate.id, tg?.initData);
             }
-            feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
+            // feedbackElement.innerHTML = `<span class="liked">Liked: ${currentCandidate.title || 'this car'}</span>`;
 
             // Wait for animation to complete before getting next word
             setTimeout(getNextCandidate, 500);
@@ -434,6 +443,9 @@ async function likeWord() {
     } catch (error) {
         console.error('Error:', error);
         feedbackElement.textContent = 'Error recording like';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
     }
 }
 
@@ -455,13 +467,16 @@ async function dislikeWord() {
             if (telegramConnected) {
                 await recordDislike(tgUser, currentCandidate.id, tg?.initData);
             }
-            feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
+            // feedbackElement.innerHTML = `<span class="disliked">Disliked: ${currentCandidate.title || 'this car'}</span>`;
             // Wait for animation to complete before getting next word
             setTimeout(getNextCandidate, 500);
         }, 300); // Match the flash animation duration
     } catch (error) {
         console.error('Error:', error);
         feedbackElement.textContent = 'Error recording dislike';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
     }
 }
 
@@ -469,11 +484,56 @@ async function dislikeWord() {
 function shareCurrentCar() {
     if (currentCandidate && telegramConnected) {
         shareFavoriteCar(tg, telegramConnected, currentCandidate);
-        feedbackElement.innerHTML = `<span class="shared">Shared: ${currentCandidate.title || 'this car'}</span>`;
+        // feedbackElement.innerHTML = `<span class="shared">Shared: ${currentCandidate.title || 'this car'}</span>`;
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
     } else {
         feedbackElement.textContent = 'No car to share';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
     }
 }
+
+// Function to share a link via Telegram using sendData
+function shareLinkViaTelegram() {
+    if (!telegramConnected) {
+        feedbackElement.textContent = 'Telegram not connected.';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
+        console.log("Cannot share: Telegram not connected.");
+        return;
+    }
+
+    if (!currentCandidate || !currentCandidate.source_link) {
+        feedbackElement.textContent = 'No car with a shareable link selected.';
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
+        console.log("Cannot share: No car selected or car has no source link.");
+        return;
+    }
+
+    const shareData = {
+        text: "Look what I found on Car Tinder!",
+        url: currentCandidate.source_link
+    };
+
+    try {
+        tg.sendData(JSON.stringify(shareData));
+        // feedbackElement.innerHTML = `<span class="shared">Link shared: ${currentCandidate.title || 'this car'}</span>`;
+        setTimeout(() => {
+            feedbackElement.textContent = '';
+        }, 10000);
+    } catch (error) {
+        console.error("Error sharing link via Telegram:", error);
+        feedbackElement.textContent = 'Failed to share link.';
+    }
+}
+
+
 
 // Add touch swipe functionality with color flashes
 let touchStartX = 0;
@@ -590,7 +650,7 @@ function getCsrfToken() {
 // Add button event listeners
 document.getElementById('like-btn').addEventListener('click', likeWord);
 document.getElementById('dislike-btn').addEventListener('click', dislikeWord);
-
+document.getElementById('share-btn').addEventListener('click', shareLinkViaTelegram);
 
 // Fix the event listeners for image navigation - move them out of the DOMContentLoaded
 // handler that would cause them to be registered twice

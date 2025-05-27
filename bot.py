@@ -31,6 +31,7 @@ def handle_web_app_data(message: types.Message):
     #     )
     # )
     data = app_data.data  # The string sent from the Mini App
+    print(f"Received data from Mini App: {id}")
     bot.send_message(id, f"Received data from Mini App: {data}")
     
 bot.polling(none_stop=True)
