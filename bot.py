@@ -1,5 +1,6 @@
 import os
 from telebot import TeleBot, types
+import json
 
 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
 bot = TeleBot(bot_token)
@@ -18,7 +19,6 @@ def send_welcome(message):
 @bot.message_handler(content_types=['web_app_data'])
 def handle_web_app_data(message: types.Message):
     app_data: types.WebAppData = message.web_app_data
-    id = message.sender_chat.id
     # prepared_message = bot.save_prepared_inline_message(
     #     user_id=id,
     #     result=types.InlineQueryResultBase(
@@ -30,8 +30,17 @@ def handle_web_app_data(message: types.Message):
     #         )
     #     )
     # )
+    id = message.from_user.id
     data = app_data.data  # The string sent from the Mini App
-    print(f"Received data from Mini App: {id}")
-    bot.send_message(id, f"Received data from Mini App: {data}")
+    print(f"Received data from Mini App: {data}")
+    try:
+        parsed_data = json.loads(data)
+        url = parsed_data.get("url", "No URL provided")
+        title = parsed_data.get("title", "My dream car!")
+        caption = f"Look what I found on Car Tinder! \n[{title}]({url})"
+        bot.send_message(id, caption, parse_mode='Markdown')
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+        parsed_data = {"error": "Invalid JSON format"}
     
 bot.polling(none_stop=True)

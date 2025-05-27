@@ -481,20 +481,6 @@ async function dislikeWord() {
 }
 
 // Share the current car through Telegram
-function shareCurrentCar() {
-    if (currentCandidate && telegramConnected) {
-        shareFavoriteCar(tg, telegramConnected, currentCandidate);
-        // feedbackElement.innerHTML = `<span class="shared">Shared: ${currentCandidate.title || 'this car'}</span>`;
-        setTimeout(() => {
-            feedbackElement.textContent = '';
-        }, 10000);
-    } else {
-        feedbackElement.textContent = 'No car to share';
-        setTimeout(() => {
-            feedbackElement.textContent = '';
-        }, 10000);
-    }
-}
 
 // Function to share a link via Telegram using sendData
 function shareLinkViaTelegram() {
@@ -518,6 +504,7 @@ function shareLinkViaTelegram() {
 
     const shareData = {
         text: "Look what I found on Car Tinder!",
+        title: currentCandidate.title,
         url: currentCandidate.source_link
     };
 
