@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, current_app
+from quart import render_template, request, jsonify, current_app
 import random
 from app import app
 import hmac
@@ -17,8 +17,8 @@ def require_auth(f):
     Validates the integrity of the data using the hash parameter
     """
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        data = request.get_json()
+    async def decorated_function(*args, **kwargs):
+        data = await request.get_json()
         
         if not data or 'auth_object' not in data:
             return jsonify({
@@ -36,7 +36,7 @@ def require_auth(f):
             return jsonify({
                 "status": "error",
                 "message": "Bot token not configured"
-            }, 500)
+            }), 500
         
         # Create secret key
         secret_key = hmac.new(
@@ -68,21 +68,21 @@ def require_auth(f):
             }), 401
         
         # Pass the authenticated data to the decorated function
-        return f(data, *args, **kwargs)
+        return await f(data, *args, **kwargs)
     
     return decorated_function
 
 @app.route('/')
-def index():
+async def index():
     """
     Serves the index.html template
     """
     app.logger.info("Rendering index.html")
-    return render_template('index.html')
+    return await render_template('index.html')
 
 @app.route('/api/goodswipe', methods=['POST'])
 @require_auth
-def goodswipe(data):
+async def goodswipe(data):
     """
     API endpoint for handling a positive swipe
     """
@@ -104,7 +104,7 @@ def goodswipe(data):
 
 @app.route('/api/badswipe', methods=['POST'])
 @require_auth
-def badswipe(data):
+async def badswipe(data):
     """
     API endpoint for handling a negative swipe
     """
@@ -126,11 +126,11 @@ def badswipe(data):
     }, 400)
 
 @app.route('/api/getnextcandidate', methods=['POST'])
-def getnextcandidate():
+async def getnextcandidate():
     """
     API endpoint that returns a batch of filtered cars from the database
     """
-    data = request.get_json() or {}
+    data = await request.get_json() or {}
     user = data.get('user', {'id': None})
     start_price = data.get('start_price', 0)
     end_price = data.get('end_price', 0)
@@ -171,7 +171,7 @@ def getnextcandidate():
     })
 
 @app.route('/api/all_cars', methods=['GET'])
-def all_cars():
+async def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
@@ -186,7 +186,7 @@ def all_cars():
     
 @app.route('/api/remove_like', methods=['POST'])
 @require_auth
-def remove_like(data):
+async def remove_like(data):
     """
     API endpoint for removing a liked vehicle
     """
@@ -211,7 +211,7 @@ def remove_like(data):
     
 @app.route('/api/get_liked_vehicles', methods=['POST'])
 @require_auth
-def get_liked_vehicles(data):
+async def get_liked_vehicles(data):
     """
     return liked vehicles with pagination
     body: {
@@ -252,7 +252,7 @@ def get_liked_vehicles(data):
     })
 
 @app.route('/api/authorize', methods=['POST'])
-def authorize():
+async def authorize():
     """
     API endpoint for authorizing Telegram Mini App data
     Validates the integrity of the data using the hash parameter
@@ -265,7 +265,7 @@ def authorize():
         ... (other Telegram WebApp initData fields)
     }
     """
-    data = request.get_json()
+    data = await request.get_json()
     app.logger.info("________Received authorization data______")
     app.logger.info(data)
     app.logger.info("__________________________________________")

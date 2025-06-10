@@ -3,7 +3,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 
-URL = "http://localhost:5000/api/getnextcandidate"  # Adjust if needed
+URL = "http://127.0.0.1:5000/api/getnextcandidate"  # Adjust if needed
 
 def make_request(user_id):
     # Generate random price range (ensuring start < end)

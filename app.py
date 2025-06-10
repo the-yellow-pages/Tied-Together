@@ -2,13 +2,13 @@ import os
 import random
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
+from quart import Quart, render_template, request, jsonify
+from quart_cors import cors
 from controllers.car import CarController
 from controllers.UserController import UserController
 from celery_config import make_celery
 
-app = Flask(__name__)
+app = Quart(__name__)
 app.config.update(
     CELERY_BROKER_URL='redis://localhost:6379/0',
     CELERY_RESULT_BACKEND='redis://localhost:6379/0'
@@ -46,10 +46,11 @@ for host in ALLOWED_HOSTS:
         origins.append(f"https://{host}")
 
 # Initialize CORS with the allowed origins
-CORS(app, origins=origins)
+app = cors(app, allow_origin=origins)
 
 
-with app.app_context():
+@app.before_serving
+async def initialize_controllers():
     app.car_controller = CarController()
     app.user_controller = UserController()
     
@@ -60,13 +61,16 @@ from routes.routes import *
 @celery.task()
 def process_data_task(data):
     # Long-running operation here
-    return result
+    # return result  # Uncomment when implementing actual logic
+    return {"processed": True, "data": data}
 
-# In your Flask routes, use background task for heavy operations:
+# In your Quart routes, use background task for heavy operations:
 @app.route('/process')
-def process():
+async def process():
+    # Get data from request or use default
+    data = await request.get_json() if request.is_json else {}
     # Start the task asynchronously
-    task = process_data_task.delay(some_data)
+    task = process_data_task.delay(data)
     return {'task_id': task.id}
 
 if __name__ == '__main__':

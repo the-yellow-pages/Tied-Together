@@ -1,0 +1,26 @@
+# Hypercorn TOML configuration for Quart application
+
+# Binding
+bind = ["0.0.0.0:5000"]
+
+# Number of workers - for ASGI applications, this is typically equal to CPU cores
+workers = 4
+
+# Timeout settings
+keep_alive = 2
+graceful_timeout = 30
+
+# Logging
+loglevel = "info"
+access_log = "-"  # Log to stdout
+error_log = "-"   # Log to stderr
+access_log_format = "%(h)s %(r)s %(s)s %(b)s %(D)s"
+
+# SSL settings (uncomment if needed)
+# keyfile = ""
+# certfile = ""
+
+# Development/Production settings
+# Set ENVIRONMENT=development for development mode
+# reload = true  # Uncomment for development
+# debug = true   # Uncomment for development

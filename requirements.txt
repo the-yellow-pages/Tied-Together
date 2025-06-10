@@ -1,4 +1,5 @@
-flask
-gunicorn
+quart
+quart-cors
+hypercorn
 celery
 redis

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Starting Quart server on port 5000 with Hypercorn..."
-# Start Quart application with Hypercorn ASGI server
-poetry run hypercorn app:app --bind 0.0.0.0:5000 --reload &
+echo "Starting Quart server in production mode with Hypercorn config..."
+# Start Quart application with Hypercorn using config file
+poetry run hypercorn --config file:hypercorn_config.py app:app &
 QUART_PID=$!
 
 # Give a moment to start
