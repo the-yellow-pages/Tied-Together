@@ -8,8 +8,8 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         self.tables = ['vehicles', 'attributes',
                        'contact', 'price', 'images', 'price_history']
         
-    def select(self, q):
-        return super().select(q)  # Use the parent class's select method
+    async def select(self, q):
+        return await super().select(q)  # Use the parent class's select method
     
     def _user_filter(self, user_id):
         """
@@ -35,7 +35,7 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             )
         """
         
-    def get_big_capacity(self, capacity=5000):
+    async def get_big_capacity(self, capacity=5000):
         q = f"""select * from 
             (select id as price_id, price as price_last, * from price_history ) t1
             left join (select id as vehicle_id, * from vehicles) t2
@@ -57,10 +57,10 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
             and t1.post_time='new'
             and t2.is_sell='unk'
             and CAST(CASE WHEN REGEXP_REPLACE(t3.cubic_capacity, '[^0-9]', '', 'g') = '' THEN '0' ELSE REGEXP_REPLACE(t3.cubic_capacity, '[^0-9]', '', 'g') END AS INTEGER)>{capacity};"""
-        cars = self.select(q)
+        cars = await self.select(q)
         return cars
     
-    def get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
+    async def get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
         """
         Retrieves cars with specific price and year conditions from the database.
         Args:
@@ -116,10 +116,10 @@ class VehiclesDB(DBBase):  # Inherit from DBBase
         
         
         q += ";"
-        cars = self.select(q)
+        cars = await self.select(q)
         return cars
     
-    def new_get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
+    async def new_get_filtered_cars(self, user_id=None, start_price=0, end_price=0, start_year=0, end_year=0, limit=0, not_fuel_type=None, fuel_type=None):
         query = f"""
         SELECT 
     ph.id AS price_id, 
@@ -170,11 +170,11 @@ AND a.first_registration != ''
         else:
             query += " limit 100"
         query += ";"
-        cars = self.select(query)
+        cars = await self.select(query)
         return cars
     
     
-    def get_hundred_vehicle(self, user_id=None):
+    async def get_hundred_vehicle(self, user_id=None):
         """
         Return list of 100 dicts in such fromat:
         [
@@ -247,7 +247,7 @@ AND a.first_registration != ''
         else:
             # Query without user filtering
             q = base_query + " limit 100;"
-        cars = self.select(q)
+        cars = await self.select(q)
             
         return cars
 

@@ -6,17 +6,17 @@ class CarController:
     def __init__(self):
         self.db = VehiclesDB()
 
-    def get_random_car(self, user_id=None):
+    async def get_random_car(self, user_id=None):
         """
         Fetch a random car from the database
         """
-        cars = self.db.get_hundred_vehicle(user_id)
+        cars = await self.db.get_hundred_vehicle(user_id)
         if not cars:
             return None
 
         return random.choice(cars)
 
-    def get_filtered_cars(self,
+    async def get_filtered_cars(self,
                           user_id,
                           start_price=0,
                           end_price=0,
@@ -29,7 +29,7 @@ class CarController:
         """
         Fetch cars from the database based on specific filters
         """
-        cars = self.db.new_get_filtered_cars(
+        cars = await self.db.new_get_filtered_cars(
             user_id, start_price, end_price, start_year, end_year, limit, not_fuel_type, fuel_type)
         if not cars:
             return None

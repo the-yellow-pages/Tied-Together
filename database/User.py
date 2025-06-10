@@ -7,8 +7,8 @@ class UsersDB(DBBase):  # Inherit from DBBase
         self.tables = ['vehicles', 'attributes',
                        'contact', 'price', 'images', 'price_history']
 
-    def select(self, q):
-        return super().select(q)  # Use the parent class's select method
+    async def select(self, q):
+        return await super().select(q)  # Use the parent class's select method
 
     def create_user_table(self):
         """
@@ -96,7 +96,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         self.cursor.execute(q)
         self.connection.commit()
 
-    def create_user(self, user_data):
+    async def create_user(self, user_data):
         """
         tested
         Insert a new user into the users table.
@@ -107,7 +107,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         VALUES (%s, %s, %s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(q, (user_data['id'], user_data.get(
+        res = await super().safely_execute_one_with_parameters(q, (user_data['id'], user_data.get(
             'first_name', ''), user_data.get('last_name', ''), user_data.get('username', '')))
         return res[0]  # Return the ID of the newly created user
 
@@ -143,7 +143,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         self.cursor.execute(q, (user_id,))
         self.connection.commit()
 
-    def create_liked_vehicle(self, liked_vehicle_data):
+    async def create_liked_vehicle(self, liked_vehicle_data):
         """
         TESTED
         Insert a new liked vehicle into the liked_vehicles table.
@@ -154,7 +154,7 @@ class UsersDB(DBBase):  # Inherit from DBBase
         VALUES (%s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(
+        res = await super().safely_execute_one_with_parameters(
             q, (liked_vehicle_data['user_id'], liked_vehicle_data['vehicle_id']))
         return res[0]  # Return the ID of the newly created liked vehicle
 
@@ -245,7 +245,7 @@ LEFT JOIN (
         self.cursor.execute(query, (all_ids,))
         return self.cursor.fetchall()
 
-    def delete_liked_vehicle(self, user_id, vehicle_id):
+    async def delete_liked_vehicle(self, user_id, vehicle_id):
         """
         tested
         Delete a liked vehicle by user_id and vehicle_id.
@@ -253,9 +253,9 @@ LEFT JOIN (
         :param vehicle_id: int
         """
         q = "DELETE FROM liked_vehicles WHERE user_id = %s AND vehicle_id = %s;"
-        return super().safely_execute_one_without_fetch(q, (user_id, vehicle_id))
+        return await super().safely_execute_one_without_fetch(q, (user_id, vehicle_id))
 
-    def create_disliked_vehicle(self, disliked_vehicle_data):
+    async def create_disliked_vehicle(self, disliked_vehicle_data):
         """
         tested
         Insert a new liked vehicle into the liked_vehicles table.
@@ -266,6 +266,6 @@ LEFT JOIN (
         VALUES (%s, %s)
         RETURNING id;
         """
-        res = super().safely_execute_one_with_parameters(
+        res = await super().safely_execute_one_with_parameters(
             q, (disliked_vehicle_data['user_id'], disliked_vehicle_data['vehicle_id']))
         return res[0]  # Return the ID of the newly created liked vehicle

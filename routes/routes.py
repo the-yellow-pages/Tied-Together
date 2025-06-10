@@ -90,7 +90,7 @@ async def goodswipe(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the liked vehicle to the database
-        res = current_app.user_controller.add_liked_vehicle(user, vehicle_id)
+        res = await current_app.user_controller.add_liked_vehicle(user, vehicle_id)
         if res:
             return jsonify({
                 "status": "success", 
@@ -113,7 +113,7 @@ async def badswipe(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the disliked vehicle to the database
-        res = current_app.user_controller.add_disliked_vehicle(user, vehicle_id)
+        res = await current_app.user_controller.add_disliked_vehicle(user, vehicle_id)
         if res:
             return jsonify({
                 "status": "success", 
@@ -148,7 +148,7 @@ async def getnextcandidate():
     if isinstance(not_fuel_type, str) and ',' in not_fuel_type:
         not_fuel_type = not_fuel_type.split(',')
     
-    cars = current_app.car_controller.get_filtered_cars(
+    cars = await current_app.car_controller.get_filtered_cars(
         user_id=id,
         start_price=start_price,
         end_price=end_price,
@@ -175,7 +175,7 @@ async def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
-    cars = current_app.car_controller.db.get_hundred_vehicle()
+    cars = await current_app.car_controller.db.get_hundred_vehicle()
     car_count = len(cars) if cars else 0
     
     return jsonify({
@@ -194,7 +194,7 @@ async def remove_like(data):
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
         # Add the liked vehicle to the database
-        res = current_app.user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
+        res = await current_app.user_controller.remove_liked_vehicle(user['id'], vehicle_id, app.logger)
         app.logger.info("________Received remove like data______")
         app.logger.info(res)
         app.logger.info("__________________________________________")

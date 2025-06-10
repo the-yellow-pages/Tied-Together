@@ -6,13 +6,13 @@ class UserController:
     def __init__(self):
         self.db = UsersDB()
         
-    def create_user(self, user_data):
+    async def create_user(self, user_data):
         """
         Create a new user.
         :param user_data: dict with keys 'id', 'first_name', 'last_name', 'username'
         """
         try:
-            return self.db.create_user(user_data)
+            return await self.db.create_user(user_data)
         except UniqueViolation as e:
             print(f"User with ID {user_data['id']} already exists. Error: {e}")
             return None
@@ -64,7 +64,7 @@ class UserController:
             
         return self.db.make_dicts(self.db.read_liked_vehicles(paginated_ids)), len(all_ids)
 
-    def add_liked_vehicle(self, user: dict, vehicle_id: int):
+    async def add_liked_vehicle(self, user: dict, vehicle_id: int):
         """
         Add a liked vehicle for a user. creates user if not exists
         :param user: dict with keys 'id', 'first_name', 'last_name', 'username'
@@ -72,7 +72,7 @@ class UserController:
         """
         user_db = self.get_user(user['id'])
         if not user_db:
-            user_id = self.create_user(user)
+            user_id = await self.create_user(user)
         else:
             user_id = user['id']
         liked_vehicle_data = {
@@ -80,13 +80,13 @@ class UserController:
             'vehicle_id': vehicle_id
         }
         try:
-            self.db.create_liked_vehicle(liked_vehicle_data)
+            await self.db.create_liked_vehicle(liked_vehicle_data)
             return liked_vehicle_data
         except UniqueViolation as e:
             print(f"Vehicle with ID {vehicle_id} already liked by user {user_id}. Error: {e}")
             return None
         
-    def add_disliked_vehicle(self, user: dict, vehicle_id):
+    async def add_disliked_vehicle(self, user: dict, vehicle_id):
         """
         tested
         Add a disliked vehicle for a user.
@@ -95,7 +95,7 @@ class UserController:
         """
         user_db = self.get_user(user['id'])
         if not user_db:
-            user_id = self.create_user(user)
+            user_id = await self.create_user(user)
         else:
             user_id = user['id']
         disliked_vehicle_data = {
@@ -103,21 +103,21 @@ class UserController:
             'vehicle_id': vehicle_id
         }
         try:
-            self.db.create_disliked_vehicle(disliked_vehicle_data)
+            await self.db.create_disliked_vehicle(disliked_vehicle_data)
             return disliked_vehicle_data
         except UniqueViolation as e:
             print(f"Vehicle with ID {vehicle_id} already disliked by user {user_id}. Error: {e}")
             return None
         
 
-    def remove_liked_vehicle(self, user_id, vehicle_id, logger):
+    async def remove_liked_vehicle(self, user_id, vehicle_id, logger):
         """
         Remove a liked vehicle for a user.
         :param user_id: int
         :param vehicle_id: int
         """
         try:
-            return self.db.delete_liked_vehicle(user_id, vehicle_id)
+            return await self.db.delete_liked_vehicle(user_id, vehicle_id)
         except Exception as e:
             logger.error(f"Error removing liked vehicle: {e}")
             return None

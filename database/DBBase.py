@@ -68,7 +68,7 @@ class DBBase:
         return [{column_names[i]: row[i] for i in range(len(row))} for row in rows]
     
         
-    def select(self, q):
+    async def select(self, q):
         self.cursor.execute(q)
         output_rows = self.cursor.fetchall()
 
@@ -81,7 +81,7 @@ class DBBase:
                             for row in output_rows]
         return output_rows_dict if output_rows_dict else None 
     
-    def select_with_parameters(self, q, params):
+    async def select_with_parameters(self, q, params):
         self.cursor.execute(q, params)
         output_rows = self.cursor.fetchall()
 
@@ -94,7 +94,7 @@ class DBBase:
                             for row in output_rows]
         return output_rows_dict if output_rows_dict else None
     
-    def safely_execute_one_with_parameters(self, query, params):
+    async def safely_execute_one_with_parameters(self, query, params):
         try:
             self.cursor.execute(query, params)
             self.connection.commit()
@@ -103,7 +103,7 @@ class DBBase:
             self.connection.rollback()
             raise e
         
-    def safely_execute_one_without_fetch(self, query, params):
+    async def safely_execute_one_without_fetch(self, query, params):
         try:
             self.cursor.execute(query, params)
             self.connection.commit()

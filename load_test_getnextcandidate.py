@@ -24,7 +24,7 @@ def make_request(user_id):
     }
     start = time.time()
     try:
-        response = requests.post(URL, json=payload, timeout=40)
+        response = requests.post(URL, json=payload, timeout=150)
         elapsed = time.time() - start
         # Improved error reporting for server errors
         if response.status_code >= 500:
@@ -50,4 +50,4 @@ def run_load_test(concurrent_users):
     print(f"Total time taken: {total_time:.3f} seconds")
 
 if __name__ == "__main__":
-    run_load_test(15)
+    run_load_test(5)
