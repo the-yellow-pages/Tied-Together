@@ -282,6 +282,58 @@ function clearValidationErrors() {
     }
 }
 
+// Function to get the next valid candidate from the queue (at least 3 images, valid source_link if present)
+async function getNextValidCandidateFromQueue() {
+    while (candidatesQueue.length > 0) {
+        const candidate = candidatesQueue.shift();
+
+        // 1. Check for valid candidate object and sufficient images
+        if (!candidate || !candidate.all_images || candidate.all_images.length < 7) {
+            // console.log(`Skipping candidate due to insufficient images or invalid candidate object.`); // Optional: for debugging
+            continue;
+        }
+
+        // 2. Check source_link: must exist and be (network-level) reachable
+        if (!candidate.source_link) {
+            console.log(`Skipping candidate ${candidate.id} because it has no source_link.`);
+            continue;
+        }
+
+        try {
+            // Attempt a HEAD request with 'no-cors' mode for source_link.
+            // We can only detect network-level failures if fetch() itself throws an error.
+            await fetch(candidate.source_link, { method: 'HEAD', mode: 'no-cors' });
+            // If fetch doesn't throw, source_link is considered network-level reachable.
+        } catch (fetchError) {
+            console.warn(`Skipping candidate ${candidate.id} due to network error for source_link (${candidate.source_link}):`, fetchError.message);
+            continue; // Skip to next candidate if source_link check fails
+        }
+
+        // 3. Check if the first image is loadable
+        // candidate.all_images[0] is guaranteed to exist due to the length check (>= 7).
+        const firstImageUrl = candidate.all_images[0];
+        if (!firstImageUrl) { // Should ideally not happen if all_images is populated correctly
+            console.warn(`Skipping candidate ${candidate.id} because first image URL is missing, despite image count.`);
+            continue;
+        }
+
+        try {
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = (event) => reject(new Error(`Failed to load image at ${firstImageUrl}. Event type: ${event.type || 'unknown'}`));
+                img.src = firstImageUrl;
+            });
+            // All checks passed (image count, source_link, first image loadable)
+            return candidate;
+        } catch (imgError) {
+            console.warn(`Skipping candidate ${candidate.id} because first image (${firstImageUrl}) failed to load:`, imgError.message);
+            continue; // Skip to next candidate if first image fails to load
+        }
+    }
+    return null; // No valid candidate found in the current queue
+}
+
 // Get next candidate from queue or fetch new batch if empty
 async function getNextCandidate(user) {
     try {
@@ -344,13 +396,68 @@ async function getNextCandidate(user) {
             }
         }
 
-        // Get the next candidate from the queue
-        if (candidatesQueue.length > 0) {
-            currentCandidate = candidatesQueue.shift();
+        // Get the next valid candidate from the queue
+        currentCandidate = await getNextValidCandidateFromQueue();
+
+        // If no valid candidate is found after filtering, and the queue is now empty,
+        // it means the fetched batch didn't have suitable candidates.
+        // We might need to fetch more or indicate no suitable cars.
+        // For now, if currentCandidate is null, it means the queue was exhausted by the filter.
+        if (!currentCandidate) {
+            // If the queue became empty after filtering, try to fetch a new batch.
+            // This could lead to a loop if new batches also don't have valid candidates.
+            // A more robust solution might limit retries or fetch larger batches.
+            if (candidatesQueue.length === 0) {
+                console.log("Queue exhausted by image filter, attempting to fetch more candidates.");
+                // Attempt to fetch a new batch
+                try {
+                    const notFuelType = currentFilters.excludedFuelTypes.length > 0
+                        ? currentFilters.excludedFuelTypes.join(',')
+                        : null;
+
+                    candidatesQueue = await fetchCandidates(user, {
+                        limit: 50, // Or a larger limit if filtering is aggressive
+                        startPrice: currentFilters.startPrice,
+                        endPrice: currentFilters.endPrice,
+                        startYear: currentFilters.startYear,
+                        endYear: currentFilters.endYear,
+                        notFuelType: notFuelType
+                    });
+                    console.log(`Fetched ${candidatesQueue.length} new candidates after filter exhaustion.`);
+                    currentCandidate = await getNextValidCandidateFromQueue(); // Try filtering the new batch
+                } catch (error) {
+                    console.error('Error fetching more candidates after filter exhaustion:', error);
+                    // Handle error similar to initial fetch error
+                    if (error.message === 'No cars available') {
+                        candidateWordElement.textContent = "No cars available with this filter (min 3 images)";
+                        feedbackElement.innerHTML = `<span class="filter-warning">Try different filter settings</span>`;
+                    } else {
+                        candidateWordElement.textContent = "Error loading car data";
+                        feedbackElement.textContent = 'Failed to fetch cars';
+                    }
+                    setTimeout(() => { feedbackElement.textContent = ''; }, 10000);
+                    return;
+                }
+            }
+        }
+
+
+        if (currentCandidate) {
             currentImageIndex = 0; // Reset image index for new candidate
         } else {
-            // No candidates available
-            candidateWordElement.textContent = "No more cars available";
+            // No candidates available that meet the image criteria
+            candidateWordElement.textContent = "No more cars available (min 3 images)";
+            // Optionally, provide more specific feedback or show filters
+            feedbackElement.innerHTML = `<span class="filter-warning">No cars found with at least 3 images. Try adjusting filters.</span>`;
+            setTimeout(() => {
+                feedbackElement.textContent = '';
+            }, 10000);
+            // Hide navigation controls if no candidate is displayed
+            document.getElementById('left-nav').style.display = 'none';
+            document.getElementById('right-nav').style.display = 'none';
+            document.getElementById('image-counter').style.display = 'none';
+            carImageElement.src = '/static/img/no-image.jpg'; // Show placeholder
+            carImageElement.alt = 'No suitable cars available';
             return;
         }
 
@@ -502,14 +609,13 @@ function shareLinkViaTelegram() {
         return;
     }
 
-    const shareData = {
-        text: "Look what I found on Car Tinder!",
-        title: currentCandidate.title,
-        url: currentCandidate.source_link
-    };
+    const title = currentCandidate.title || 'Check out this car';
+    const url = currentCandidate.source_link;
+    const text = `Look what I found on @car_tinder_bot !\n> ${title} <\n\n${url}`;
 
     try {
-        tg.sendData(JSON.stringify(shareData));
+        // Use openTelegramLink to share the formatted text
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(text)}`);
         // feedbackElement.innerHTML = `<span class="shared">Link shared: ${currentCandidate.title || 'this car'}</span>`;
         setTimeout(() => {
             feedbackElement.textContent = '';
