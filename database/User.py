@@ -121,6 +121,15 @@ class UsersDB(DBBase):  # Inherit from DBBase
         self.cursor.execute(q, (user_id,))
         return self.cursor.fetchone()
 
+    def read_all_users(self):
+        """
+        Retrieve all users from the users table.
+        :return: list of tuples containing user data
+        """
+        q = "SELECT * FROM users;"
+        self.cursor.execute(q)
+        return self.cursor.fetchall()
+
     def update_user(self, user_id, updated_data):
         """
         TODO: test

@@ -77,7 +77,7 @@ async def index():
     """
     Serves the index.html template
     """
-    app.logger.info("Rendering index.html")
+    app.logger.info("INDEX: Rendering index.html")
     return await render_template('index.html')
 
 @app.route('/api/goodswipe', methods=['POST'])
@@ -86,6 +86,8 @@ async def goodswipe(data):
     """
     API endpoint for handling a positive swipe
     """
+    app.logger.info("GOODSWIPE: Processing positive swipe")
+    app.logger.info(f"GOODSWIPE: Data - {data}")
     user = data.get('user')
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
@@ -108,6 +110,8 @@ async def badswipe(data):
     """
     API endpoint for handling a negative swipe
     """
+    app.logger.info("BADSWIPE: Processing negative swipe")
+    app.logger.info(f"BADSWIPE: Data - {data}")
     # Process the negative swipe data
     user = data.get('user')
     vehicle_id = data.get('candidateId')
@@ -131,6 +135,8 @@ async def getnextcandidate():
     API endpoint that returns a batch of filtered cars from the database
     """
     data = await request.get_json() or {}
+    app.logger.info("GETNEXTCANDIDATE: Fetching next candidates")
+    app.logger.info(f"GETNEXTCANDIDATE: Filters - {data}")
     user = data.get('user', {'id': None})
     start_price = data.get('start_price', 0)
     end_price = data.get('end_price', 0)
@@ -175,6 +181,7 @@ async def all_cars():
     """
     API endpoint that returns all available car types for debugging
     """
+    app.logger.info("ALL_CARS: Fetching all cars for debugging")
     cars = await current_app.car_controller.db.get_hundred_vehicle()
     car_count = len(cars) if cars else 0
     
@@ -190,6 +197,8 @@ async def remove_like(data):
     """
     API endpoint for removing a liked vehicle
     """
+    app.logger.info("REMOVE_LIKE: Processing remove like request")
+    app.logger.info(f"REMOVE_LIKE: Data - {data}")
     user = data.get('user')
     vehicle_id = data.get('candidateId')
     if user and vehicle_id:
@@ -220,6 +229,8 @@ async def get_liked_vehicles(data):
         "limit": 10
     }
     """
+    app.logger.info("GET_LIKED_VEHICLES: Fetching liked vehicles")
+    app.logger.info(f"GET_LIKED_VEHICLES: Data - {data}")
     user_id = data.get('user_id')
     page = data.get('page', 1)
     limit = data.get('limit', 10)
@@ -266,6 +277,7 @@ async def authorize():
     }
     """
     data = await request.get_json()
+    app.logger.info("AUTHORIZE: Processing authorization request")
     app.logger.info("________Received authorization data______")
     app.logger.info(data)
     app.logger.info("__________________________________________")

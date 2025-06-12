@@ -1,0 +1,15 @@
+[Unit]
+Description=Start Tinder Ngrok Production Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/alex/projects/car_tinder/start_ngrok_prod.sh
+Restart=always
+RestartSec=10
+User=alex
+WorkingDirectory=/home/alex/projects/car_tinder
+Environment=PATH=/home/alex/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

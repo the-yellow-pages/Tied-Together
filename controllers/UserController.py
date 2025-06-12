@@ -25,6 +25,14 @@ class UserController:
         # return self.db.read_user(user_id)
         return self.db.make_dict(self.db.read_user(user_id))
 
+    def get_all_users(self):
+        """
+        Retrieve all users from the database.
+        :return: list of dictionaries containing user data
+        """
+        users = self.db.read_all_users()
+        return self.db.make_dicts(users) if users else []
+
     def update_user(self, user_id, updated_data):
         """
         Update user details.
